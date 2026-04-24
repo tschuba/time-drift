@@ -1,0 +1,21 @@
+<div class="block-row" id="block-{{ index }}">
+    <div class="form-group">
+        <label>Start</label>
+        <input type="time" name="starts" value="{{ start_value }}" required>
+    </div>
+    <div class="form-group">
+        <label>End</label>
+        <input type="time" name="ends" value="{{ end_value }}">
+    </div>
+    <div class="form-group break-input">
+        <label>Break (h)</label>
+        <input type="number" name="breaks" value="{{ break_value }}" step="0.25" min="0">
+    </div>
+    <div class="form-group remove-btn">
+        <label>&nbsp;</label>
+        <button type="button" class="btn btn-danger btn-sm"
+                hx-delete="/day/{{ date }}/block/{{ index }}"
+                hx-target="#block-{{ index }}"
+                hx-swap="outerHTML">✕</button>
+    </div>
+</div>

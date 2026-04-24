@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}{{ date }} — Time Drift{% endblock %}
+
+{% block content %}
+<div class="flex-between mb-2">
+    <h1>{{ weekday }}, {{ date }}</h1>
+    {% if exists %}
+    <form method="POST" action="/day/{{ date }}/delete"
+          onsubmit="return confirm('Delete this day entry?')">
+        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+    </form>
+    {% endif %}
+</div>
+
+<form method="POST" action="/day/{{ date }}">
+    <div class="card">
+        <div class="form-group">
+            <label>Target Hours (Soll)</label>
+            <input type="number" name="target_hours" value="{{ target_hours }}"
+                   step="0.5" min="0" max="24" style="max-width: 120px;">
+        </div>
+
+        <div class="card-title">Time Blocks</div>
+        <div id="blocks-container">
+            {% for block in blocks %}
+            <div class="block-row" id="block-{{ block.index }}">
+                <div class="form-group">
+                    <label>Start</label>
+                    <input type="time" name="starts" value="{{ block.start_value }}" required>
+                </div>
+                <div class="form-group">
+                    <label>End</label>
+                    <input type="time" name="ends" value="{{ block.end_value }}">
+                </div>
+                <div class="form-group break-input">
+                    <label>Break (h)</label>
+                    <input type="number" name="breaks" value="{{ block.break_value }}" step="0.25" min="0">
+                </div>
+                <div class="form-group remove-btn">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            hx-delete="/day/{{ date }}/block/{{ block.index }}"
+                            hx-target="#block-{{ block.index }}"
+                            hx-swap="outerHTML">✕</button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <button type="button" class="btn btn-secondary btn-sm mt-1"
+                hx-get="/day/{{ date }}/add-block?index={{ blocks_len }}"
+                hx-target="#blocks-container"
+                hx-swap="beforeend">
+            + Add Block
+        </button>
+
+        <div class="form-group mt-2">
+            <label>Note</label>
+            <textarea name="note" rows="2" placeholder="Optional remark...">{{ note }}</textarea>
+        </div>
+    </div>
+
+    {% if actual_hours.is_some() %}
+    <div class="card">
+        <div class="flex-between">
+            <div>
+                <span class="text-muted">Actual:</span>
+                <strong>{{ formatted_actual }}h</strong>
+            </div>
+            <div>
+                <span class="text-muted">Saldo:</span>
+                <span class="saldo-badge saldo-small {% if saldo_positive %}saldo-positive{% elif saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                    {{ formatted_saldo }}
+                </span>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <button type="submit" class="btn btn-primary">Save</button>
+    <a href="/month/{{ month_str }}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

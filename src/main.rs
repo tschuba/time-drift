@@ -1,6 +1,7 @@
 mod config;
 mod db;
 mod models;
+mod routes;
 mod services;
 
 use axum::{routing::get, Router};
@@ -26,6 +27,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/health", get(health))
+        .merge(routes::create_router())
         .nest_service("/static", ServeDir::new("static"))
         .with_state(pool);
 
