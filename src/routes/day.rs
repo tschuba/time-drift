@@ -20,6 +20,7 @@ use crate::services::time;
 /// A single time block rendered in the form.
 pub struct BlockView {
     pub index: usize,
+    #[allow(dead_code)]
     pub date: String,
     pub start_value: String,
     pub end_value: String,
@@ -90,7 +91,7 @@ async fn show_day(
     let date = parse_date(&date_str)?;
     let day = models::get_day_with_blocks(&pool, date)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let (exists, target_hours, blocks, note) = match day {
         Some(d) => {
@@ -130,7 +131,7 @@ async fn show_day(
     let block_tuples: Vec<_> = if exists {
         let day = models::get_day_with_blocks(&pool, date)
             .await
-            .map_err(|e| internal_error(e))?;
+            .map_err(internal_error)?;
         match day {
             Some(d) => d
                 .blocks
@@ -147,10 +148,10 @@ async fn show_day(
     let saldo = time::daily_saldo(actual_hours, target_hours);
 
     let formatted_actual = actual_hours
-        .map(|a| time::format_hours(a))
+        .map(time::format_hours)
         .unwrap_or_default();
     let formatted_saldo = saldo
-        .map(|s| time::format_saldo(s))
+        .map(time::format_saldo)
         .unwrap_or_default();
     let saldo_positive = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
     let saldo_negative = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);
@@ -187,12 +188,12 @@ async fn save_day(
 
     let entry = models::upsert_entry(&pool, date, input.target_hours, note_ref)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     // Delete old blocks and insert new ones.
     models::delete_blocks_for_entry(&pool, entry.id)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let count = input.starts.len();
     for i in 0..count {
@@ -209,7 +210,7 @@ async fn save_day(
 
         models::insert_block(&pool, entry.id, start, end, break_hours, i as i16)
             .await
-            .map_err(|e| internal_error(e))?;
+            .map_err(internal_error)?;
     }
 
     let month_str = date.format("%Y-%m").to_string();
@@ -225,7 +226,7 @@ async fn delete_day(
 
     models::delete_entry(&pool, date)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let month_str = date.format("%Y-%m").to_string();
     Ok(Redirect::to(&format!("/month/{}", month_str)))
@@ -274,8 +275,7 @@ fn weekday_name(date: NaiveDate) -> String {
 
 fn format_target(d: Decimal) -> String {
     // Remove trailing zeros for cleaner display: "8" instead of "8.00"
-    let s = d.normalize().to_string();
-    s
+    d.normalize().to_string()
 }
 
 fn format_break(d: Decimal) -> String {

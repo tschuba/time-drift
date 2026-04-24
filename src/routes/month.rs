@@ -70,7 +70,7 @@ pub async fn handler(
     // Fetch entries for the month
     let entries = models::get_entries_for_date_range(&pool, first_day, last_day)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     // Build lookup by date
     let mut entries_map: std::collections::HashMap<NaiveDate, _> = entries
@@ -124,11 +124,11 @@ pub async fn handler(
                     let saldo = time::daily_saldo(actual, target);
 
                     let actual_str = actual
-                        .map(|a| time::format_hours(a))
+                        .map(time::format_hours)
                         .unwrap_or_else(|| "—".to_string());
                     let target_str = time::format_hours(target);
                     let saldo_str = saldo
-                        .map(|s| time::format_saldo(s))
+                        .map(time::format_saldo)
                         .unwrap_or_else(|| "—".to_string());
                     let sp = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
                     let sn = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);

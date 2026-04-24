@@ -63,7 +63,7 @@ pub async fn handler(
     // Total running saldo
     let total_saldo = models::get_total_saldo(&pool)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let formatted_saldo = time::format_saldo(total_saldo);
     let saldo_positive = total_saldo > Decimal::ZERO;
@@ -72,7 +72,7 @@ pub async fn handler(
     // Today's entry
     let today_day = models::get_day_with_blocks(&pool, today)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let (today_exists, today_blocks, today_actual, today_saldo, today_saldo_positive, today_saldo_negative) =
         match today_day {
@@ -99,10 +99,10 @@ pub async fn handler(
                 let saldo = time::daily_saldo(actual, d.entry.target_hours);
 
                 let actual_str = actual
-                    .map(|a| time::format_hours(a))
+                    .map(time::format_hours)
                     .unwrap_or_else(|| "—".to_string());
                 let saldo_str = saldo
-                    .map(|s| time::format_saldo(s))
+                    .map(time::format_saldo)
                     .unwrap_or_else(|| "—".to_string());
                 let sp = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
                 let sn = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);
@@ -123,7 +123,7 @@ pub async fn handler(
     let from = today - chrono::Duration::days(6);
     let entries = models::get_entries_for_date_range(&pool, from, today)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     // Build a lookup by date for entries we have
     let mut entries_map: std::collections::HashMap<NaiveDate, _> = entries
@@ -152,11 +152,11 @@ pub async fn handler(
                 let saldo = time::daily_saldo(actual, d.entry.target_hours);
 
                 let actual_str = actual
-                    .map(|a| time::format_hours(a))
+                    .map(time::format_hours)
                     .unwrap_or_else(|| "—".to_string());
                 let target_str = time::format_hours(d.entry.target_hours);
                 let saldo_str = saldo
-                    .map(|s| time::format_saldo(s))
+                    .map(time::format_saldo)
                     .unwrap_or_else(|| "—".to_string());
                 let sp = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
                 let sn = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);

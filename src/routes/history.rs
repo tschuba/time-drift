@@ -94,7 +94,7 @@ pub async fn handler(
     // Fetch paginated entries
     let (entries, total_entries) = models::get_entries_paginated(&pool, offset, PAGE_SIZE, from, to)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let total_pages = if total_entries == 0 {
         1
@@ -121,11 +121,11 @@ pub async fn handler(
         let saldo = time::daily_saldo(actual, day.entry.target_hours);
 
         let actual_str = actual
-            .map(|a| time::format_hours(a))
+            .map(time::format_hours)
             .unwrap_or_else(|| "—".to_string());
         let target_str = time::format_hours(day.entry.target_hours);
         let saldo_str = saldo
-            .map(|s| time::format_saldo(s))
+            .map(time::format_saldo)
             .unwrap_or_else(|| "—".to_string());
         let sp = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
         let sn = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);
@@ -133,7 +133,7 @@ pub async fn handler(
         // Running saldo up to this date
         let running_dec = models::get_running_saldo_up_to(&pool, date)
             .await
-            .map_err(|e| internal_error(e))?;
+            .map_err(internal_error)?;
         let running_str = time::format_saldo(running_dec);
         let rp = running_dec > Decimal::ZERO;
         let rn = running_dec < Decimal::ZERO;

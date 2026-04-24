@@ -71,7 +71,7 @@ pub async fn handler(
     // Stat cards
     let summary = models::get_analytics_summary(&pool)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
 
     let avg_actual = time::format_hours(summary.avg_actual_per_workday);
     let avg_saldo = time::format_saldo(summary.avg_daily_saldo);
@@ -92,17 +92,17 @@ pub async fn handler(
     // Charts
     let trend_data = models::get_saldo_trend(&pool, from, to)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
     let saldo_trend_svg = charts::render_saldo_trend(&trend_data);
 
     let monthly_data = models::get_monthly_hours(&pool, from, to)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
     let hours_bar_svg = charts::render_hours_bar_chart(&monthly_data);
 
     let heatmap_data = models::get_heatmap_data(&pool, heatmap_year)
         .await
-        .map_err(|e| internal_error(e))?;
+        .map_err(internal_error)?;
     let heatmap_svg = charts::render_heatmap(&heatmap_data, heatmap_year);
 
     let tmpl = AnalyticsTemplate {
