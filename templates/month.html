@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}{{ month_label }} — Time Drift{% endblock %}
+
+{% block content %}
+<div class="month-nav">
+    <a href="/month/{{ prev_month }}" class="btn btn-secondary btn-sm">&larr; {{ prev_month_label }}</a>
+    <h2>{{ month_label }}</h2>
+    <a href="/month/{{ next_month }}" class="btn btn-secondary btn-sm">{{ next_month_label }} &rarr;</a>
+</div>
+
+<div class="card">
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Time Blocks</th>
+                <th class="text-right">Actual</th>
+                <th class="text-right">Target</th>
+                <th class="text-right">Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in days %}
+            <tr class="{% if day.is_weekend %}weekend{% endif %}">
+                <td><a href="/day/{{ day.date }}">{{ day.weekday_short }} {{ day.date_short }}</a></td>
+                <td>
+                    {% for block in day.blocks_display %}
+                    <span class="text-muted">{{ block }}</span>
+                    {% if !loop.last %}<br>{% endif %}
+                    {% endfor %}
+                </td>
+                <td class="text-right tabular">{{ day.actual }}</td>
+                <td class="text-right tabular">{{ day.target }}</td>
+                <td class="text-right">
+                    <span class="saldo-badge saldo-small {% if day.saldo_positive %}saldo-positive{% elif day.saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                        {{ day.saldo }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="2"><strong>Total</strong></td>
+                <td class="text-right tabular"><strong>{{ total_actual }}</strong></td>
+                <td class="text-right tabular"><strong>{{ total_target }}</strong></td>
+                <td class="text-right">
+                    <span class="saldo-badge saldo-small {% if total_saldo_positive %}saldo-positive{% elif total_saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                        <strong>{{ total_saldo }}</strong>
+                    </span>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+{% endblock %}
