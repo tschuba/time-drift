@@ -1,4 +1,4 @@
-use chrono::{NaiveDate, NaiveTime};
+use chrono::{Datelike, NaiveDate, NaiveTime};
 use rust_decimal::Decimal;
 use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
@@ -317,4 +317,253 @@ pub async fn get_entries_paginated(
         .collect();
 
     Ok((days, total))
+}
+
+// ---------------------------------------------------------------------------
+// Analytics structs
+// ---------------------------------------------------------------------------
+
+/// Summary statistics for analytics.
+#[derive(Debug, Clone)]
+pub struct AnalyticsSummary {
+    pub avg_actual_per_workday: Decimal,
+    pub avg_daily_saldo: Decimal,
+    pub total_overtime_this_month: Decimal,
+    pub total_overtime_this_year: Decimal,
+    pub busiest_weekday: String,
+    pub overtime_frequency_pct: Decimal,
+}
+
+/// Data point for a saldo trend chart.
+#[derive(Debug, Clone)]
+pub struct SaldoTrendPoint {
+    pub date: NaiveDate,
+    pub cumulative_saldo: Decimal,
+}
+
+/// Data point for weekly/monthly hours comparison.
+#[derive(Debug, Clone)]
+pub struct PeriodHours {
+    pub label: String,
+    pub actual_hours: Decimal,
+    pub target_hours: Decimal,
+}
+
+/// Data point for heatmap.
+#[derive(Debug, Clone)]
+pub struct HeatmapDay {
+    pub date: NaiveDate,
+    pub hours: Decimal,
+}
+
+// ---------------------------------------------------------------------------
+// Analytics query functions
+// ---------------------------------------------------------------------------
+
+/// Compute analytics summary statistics across all recorded entries.
+pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSummary> {
+    let today = chrono::Local::now().date_naive();
+    let month_start = NaiveDate::from_ymd_opt(today.year(), today.month(), 1).unwrap();
+    let year_start = NaiveDate::from_ymd_opt(today.year(), 1, 1).unwrap();
+
+    // avg_actual_per_workday: average actual hours on workdays with target > 0 and actual > 0
+    let avg_actual_row: (Decimal,) = sqlx::query_as(
+        "SELECT COALESCE(AVG(actual), 0)
+         FROM (
+             SELECT (SELECT COALESCE(SUM(
+                 EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as actual
+             FROM time_entries e
+             WHERE e.target_hours > 0
+         ) sub
+         WHERE sub.actual > 0",
+    )
+    .fetch_one(pool)
+    .await?;
+
+    // avg_daily_saldo: average of (actual - target) across all entries
+    let avg_saldo_row: (Decimal,) = sqlx::query_as(
+        "SELECT COALESCE(AVG(
+            (SELECT COALESCE(SUM(
+                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+            ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+            - e.target_hours
+        ), 0)
+        FROM time_entries e",
+    )
+    .fetch_one(pool)
+    .await?;
+
+    // total_overtime_this_month
+    let month_ot_row: (Decimal,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(
+            (SELECT COALESCE(SUM(
+                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+            ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+            - e.target_hours
+        ), 0)
+        FROM time_entries e
+        WHERE e.date >= $1 AND e.date <= $2",
+    )
+    .bind(month_start)
+    .bind(today)
+    .fetch_one(pool)
+    .await?;
+
+    // total_overtime_this_year
+    let year_ot_row: (Decimal,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(
+            (SELECT COALESCE(SUM(
+                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+            ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+            - e.target_hours
+        ), 0)
+        FROM time_entries e
+        WHERE e.date >= $1 AND e.date <= $2",
+    )
+    .bind(year_start)
+    .bind(today)
+    .fetch_one(pool)
+    .await?;
+
+    // busiest_weekday: day name with highest average actual hours (workdays only)
+    let busiest_row: Option<(String,)> = sqlx::query_as(
+        "SELECT TO_CHAR(e.date, 'Day') as day_name
+         FROM time_entries e
+         WHERE e.target_hours > 0
+         GROUP BY EXTRACT(ISODOW FROM e.date), TO_CHAR(e.date, 'Day')
+         ORDER BY AVG(
+             (SELECT COALESCE(SUM(
+                 EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+         ) DESC
+         LIMIT 1",
+    )
+    .fetch_optional(pool)
+    .await?;
+    let busiest_weekday = busiest_row
+        .map(|r| r.0.trim().to_string())
+        .unwrap_or_else(|| "N/A".to_string());
+
+    // overtime_frequency_pct: percentage of workdays where actual > target
+    let freq_row: (Decimal,) = sqlx::query_as(
+        "SELECT CASE WHEN COUNT(*) = 0 THEN 0 ELSE
+            ROUND(100.0 * SUM(CASE WHEN sub.actual > sub.target_hours THEN 1 ELSE 0 END)::numeric
+                  / COUNT(*)::numeric, 1)
+         END
+         FROM (
+             SELECT e.target_hours,
+                    (SELECT COALESCE(SUM(
+                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                    ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as actual
+             FROM time_entries e
+             WHERE e.target_hours > 0
+         ) sub",
+    )
+    .fetch_one(pool)
+    .await?;
+
+    Ok(AnalyticsSummary {
+        avg_actual_per_workday: avg_actual_row.0,
+        avg_daily_saldo: avg_saldo_row.0,
+        total_overtime_this_month: month_ot_row.0,
+        total_overtime_this_year: year_ot_row.0,
+        busiest_weekday,
+        overtime_frequency_pct: freq_row.0,
+    })
+}
+
+/// Returns date + cumulative saldo up to that date, for each entry in the given range.
+pub async fn get_saldo_trend(
+    pool: &PgPool,
+    from: Option<NaiveDate>,
+    to: Option<NaiveDate>,
+) -> sqlx::Result<Vec<SaldoTrendPoint>> {
+    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+        "SELECT e.date,
+                SUM(
+                    (SELECT COALESCE(SUM(
+                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                    ), 0) FROM time_blocks b WHERE b.entry_id = e2.id AND b.end_time IS NOT NULL)
+                    - e2.target_hours
+                ) as cumulative_saldo
+         FROM time_entries e
+         JOIN time_entries e2 ON e2.date <= e.date
+         WHERE ($1::date IS NULL OR e.date >= $1)
+           AND ($2::date IS NULL OR e.date <= $2)
+         GROUP BY e.date
+         ORDER BY e.date",
+    )
+    .bind(from)
+    .bind(to)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(date, cumulative_saldo)| SaldoTrendPoint {
+            date,
+            cumulative_saldo,
+        })
+        .collect())
+}
+
+/// Groups entries by month (YYYY-MM), summing actual and target hours per month.
+pub async fn get_monthly_hours(
+    pool: &PgPool,
+    from: Option<NaiveDate>,
+    to: Option<NaiveDate>,
+) -> sqlx::Result<Vec<PeriodHours>> {
+    let rows: Vec<(String, Decimal, Decimal)> = sqlx::query_as(
+        "SELECT TO_CHAR(e.date, 'YYYY-MM') as label,
+                COALESCE(SUM(
+                    (SELECT COALESCE(SUM(
+                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                    ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+                ), 0) as actual_hours,
+                COALESCE(SUM(e.target_hours), 0) as target_hours
+         FROM time_entries e
+         WHERE ($1::date IS NULL OR e.date >= $1)
+           AND ($2::date IS NULL OR e.date <= $2)
+         GROUP BY TO_CHAR(e.date, 'YYYY-MM')
+         ORDER BY label",
+    )
+    .bind(from)
+    .bind(to)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(label, actual_hours, target_hours)| PeriodHours {
+            label,
+            actual_hours,
+            target_hours,
+        })
+        .collect())
+}
+
+/// Returns date + actual hours for all entries in a given year (for heatmap).
+pub async fn get_heatmap_data(pool: &PgPool, year: i32) -> sqlx::Result<Vec<HeatmapDay>> {
+    let year_start = NaiveDate::from_ymd_opt(year, 1, 1).unwrap();
+    let year_end = NaiveDate::from_ymd_opt(year, 12, 31).unwrap();
+
+    let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
+        "SELECT e.date,
+                (SELECT COALESCE(SUM(
+                    EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as hours
+         FROM time_entries e
+         WHERE e.date >= $1 AND e.date <= $2
+         ORDER BY e.date",
+    )
+    .bind(year_start)
+    .bind(year_end)
+    .fetch_all(pool)
+    .await?;
+
+    Ok(rows
+        .into_iter()
+        .map(|(date, hours)| HeatmapDay { date, hours })
+        .collect())
 }
