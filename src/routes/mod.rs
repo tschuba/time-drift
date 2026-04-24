@@ -1,8 +1,11 @@
+pub mod dashboard;
 pub mod day;
 
-use axum::Router;
+use axum::{routing::get, Router};
 use sqlx::PgPool;
 
 pub fn create_router() -> Router<PgPool> {
-    Router::new().merge(day::router())
+    Router::new()
+        .route("/", get(dashboard::handler))
+        .merge(day::router())
 }

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard — Time Drift{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-title">Running Saldo</div>
+    <span class="saldo-badge {% if saldo_positive %}saldo-positive{% elif saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+        {{ formatted_saldo }}h
+    </span>
+</div>
+
+<div class="card">
+    <div class="flex-between mb-1">
+        <div class="card-title">Today — {{ today_weekday }}, {{ today_date }}</div>
+        {% if !today_exists %}
+        <a href="/day/{{ today_date }}" class="btn btn-primary btn-sm">+ Log Today</a>
+        {% else %}
+        <a href="/day/{{ today_date }}" class="btn btn-secondary btn-sm">Edit</a>
+        {% endif %}
+    </div>
+    {% if today_exists %}
+    <div class="flex-between">
+        <div>
+            {% for block in today_blocks %}
+            <span class="text-muted">{{ block.start }}–{{ block.end }}</span>{% if !loop.last %}, {% endif %}
+            {% endfor %}
+        </div>
+        <div>
+            <strong>{{ today_actual }}h</strong>
+            <span class="saldo-badge saldo-small {% if today_saldo_positive %}saldo-positive{% elif today_saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                {{ today_saldo }}
+            </span>
+        </div>
+    </div>
+    {% else %}
+    <p class="text-muted">No entry yet.</p>
+    {% endif %}
+</div>
+
+<div class="card">
+    <div class="card-title">Last 7 Days</div>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th class="text-right">Actual</th>
+                <th class="text-right">Target</th>
+                <th class="text-right">Saldo</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for day in recent_days %}
+            <tr class="{% if day.is_weekend %}weekend{% endif %}">
+                <td><a href="/day/{{ day.date }}">{{ day.weekday_short }} {{ day.date_short }}</a></td>
+                <td class="text-right tabular">{{ day.actual }}</td>
+                <td class="text-right tabular">{{ day.target }}</td>
+                <td class="text-right">
+                    <span class="saldo-badge saldo-small {% if day.saldo_positive %}saldo-positive{% elif day.saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                        {{ day.saldo }}
+                    </span>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
