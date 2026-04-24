@@ -1,3 +1,4 @@
+pub mod analytics;
 pub mod dashboard;
 pub mod day;
 pub mod history;
@@ -12,5 +13,6 @@ pub fn create_router() -> Router<PgPool> {
         .route("/month", get(month::handler))
         .route("/month/{ym}", get(month::handler))
         .route("/history", get(history::handler))
+        .route("/analytics", get(analytics::handler))
         .merge(day::router())
 }

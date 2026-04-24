@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics — Time Drift{% endblock %}
+
+{% block content %}
+<h1 class="mb-2">Analytics</h1>
+
+<div class="stat-grid mb-2">
+    <div class="stat-card">
+        <div class="stat-value">{{ avg_actual }}h</div>
+        <div class="stat-label">Avg Hours / Workday</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value {% if avg_saldo_positive %}saldo-positive{% elif avg_saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">{{ avg_saldo }}</div>
+        <div class="stat-label">Avg Daily Saldo</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value {% if month_ot_positive %}saldo-positive{% elif month_ot_negative %}saldo-negative{% else %}saldo-zero{% endif %}">{{ month_overtime }}</div>
+        <div class="stat-label">This Month</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value {% if year_ot_positive %}saldo-positive{% elif year_ot_negative %}saldo-negative{% else %}saldo-zero{% endif %}">{{ year_overtime }}</div>
+        <div class="stat-label">This Year</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ busiest_weekday }}</div>
+        <div class="stat-label">Busiest Day</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value">{{ overtime_pct }}%</div>
+        <div class="stat-label">Overtime Frequency</div>
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="flex-between mb-1">
+        <div class="card-title">Saldo Trend</div>
+        <div class="flex gap-1">
+            <a href="/analytics?range=3m" class="btn btn-sm {% if range == "3m" %}btn-primary{% else %}btn-secondary{% endif %}">3M</a>
+            <a href="/analytics?range=6m" class="btn btn-sm {% if range == "6m" %}btn-primary{% else %}btn-secondary{% endif %}">6M</a>
+            <a href="/analytics?range=1y" class="btn btn-sm {% if range == "1y" %}btn-primary{% else %}btn-secondary{% endif %}">1Y</a>
+            <a href="/analytics?range=all" class="btn btn-sm {% if range == "all" %}btn-primary{% else %}btn-secondary{% endif %}">All</a>
+        </div>
+    </div>
+    <div class="chart-container">
+        {{ saldo_trend_svg|safe }}
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="card-title">Monthly Hours (Actual vs Target)</div>
+    <div class="chart-container">
+        {{ hours_bar_svg|safe }}
+    </div>
+</div>
+
+<div class="card mb-2">
+    <div class="flex-between mb-1">
+        <div class="card-title">Work Intensity — {{ heatmap_year }}</div>
+        <div class="flex gap-1">
+            <a href="/analytics?range={{ range }}&heatmap_year={{ prev_heatmap_year }}" class="btn btn-secondary btn-sm">← {{ prev_heatmap_year }}</a>
+            <a href="/analytics?range={{ range }}&heatmap_year={{ next_heatmap_year }}" class="btn btn-secondary btn-sm">{{ next_heatmap_year }} →</a>
+        </div>
+    </div>
+    <div class="chart-container">
+        {{ heatmap_svg|safe }}
+    </div>
+</div>
+{% endblock %}
