@@ -225,6 +225,25 @@ pub async fn get_total_saldo(pool: &PgPool) -> sqlx::Result<Decimal> {
     Ok(row.0)
 }
 
+/// Compute the running saldo (cumulative actual - target) for all entries up to and including a date.
+pub async fn get_running_saldo_up_to(pool: &PgPool, date: NaiveDate) -> sqlx::Result<Decimal> {
+    let row: (Decimal,) = sqlx::query_as(
+        "SELECT COALESCE(SUM(
+            (SELECT COALESCE(SUM(
+                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+            ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+            - e.target_hours
+        ), 0) as saldo
+        FROM time_entries e
+        WHERE e.date <= $1",
+    )
+    .bind(date)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(row.0)
+}
+
 /// Fetch paginated entries with optional date filters. Returns (entries with blocks, total count).
 pub async fn get_entries_paginated(
     pool: &PgPool,

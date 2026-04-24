@@ -1,5 +1,6 @@
 pub mod dashboard;
 pub mod day;
+pub mod history;
 pub mod month;
 
 use axum::{routing::get, Router};
@@ -10,5 +11,6 @@ pub fn create_router() -> Router<PgPool> {
         .route("/", get(dashboard::handler))
         .route("/month", get(month::handler))
         .route("/month/{ym}", get(month::handler))
+        .route("/history", get(history::handler))
         .merge(day::router())
 }
