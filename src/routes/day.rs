@@ -21,8 +21,6 @@ use crate::services::time;
 /// A single time block rendered in the form.
 pub struct BlockView {
     pub index: usize,
-    #[allow(dead_code)]
-    pub date: String,
     pub start_value: String,
     pub end_value: String,
     pub break_value: String,
@@ -47,14 +45,13 @@ struct DayFormTemplate {
     formatted_saldo: String,
     saldo_positive: bool,
     saldo_negative: bool,
-    month_str: String,
+    return_to: String,
 }
 
 #[derive(Template)]
 #[template(path = "partials/time_block_row.html")]
 struct TimeBlockRowTemplate {
     index: usize,
-    date: String,
     start_value: String,
     end_value: String,
     break_value: String,
@@ -67,6 +64,16 @@ struct TimeBlockRowTemplate {
 #[derive(serde::Deserialize)]
 pub struct AddBlockQuery {
     index: usize,
+}
+
+#[derive(serde::Deserialize)]
+pub struct ShowDayQuery {
+    from: Option<String>,
+}
+
+#[derive(serde::Deserialize)]
+pub struct DeleteDayInput {
+    return_to: Option<String>,
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +95,7 @@ pub fn router() -> Router<PgPool> {
 async fn show_day(
     State(pool): State<PgPool>,
     Path(date_str): Path<String>,
+    Query(query): Query<ShowDayQuery>,
 ) -> Result<Html<String>, Html<String>> {
     let date = parse_date(&date_str)?;
     let day = models::get_day_with_blocks(&pool, date)
@@ -104,7 +112,6 @@ async fn show_day(
                 .enumerate()
                 .map(|(i, b)| BlockView {
                     index: i,
-                    date: date_str.clone(),
                     start_value: b.start_time.format("%H:%M").to_string(),
                     end_value: b
                         .end_time
@@ -119,7 +126,6 @@ async fn show_day(
             let target = time::default_target_hours(date);
             let blocks = vec![BlockView {
                 index: 0,
-                date: date_str.clone(),
                 start_value: String::new(),
                 end_value: String::new(),
                 break_value: String::new(),
@@ -159,6 +165,11 @@ async fn show_day(
 
     let blocks_len = blocks.len();
 
+    let return_to = match query.from.as_deref() {
+        Some("dashboard") => "/".to_string(),
+        _ => format!("/month/{}", date.format("%Y-%m")),
+    };
+
     let tmpl = DayFormTemplate {
         date: date_str,
         weekday: weekday_name(date),
@@ -172,7 +183,7 @@ async fn show_day(
         formatted_saldo,
         saldo_positive,
         saldo_negative,
-        month_str: date.format("%Y-%m").to_string(),
+        return_to,
     };
 
     Ok(Html(tmpl.render().unwrap()))
@@ -214,14 +225,18 @@ async fn save_day(
             .map_err(internal_error)?;
     }
 
-    let month_str = date.format("%Y-%m").to_string();
-    Ok(Redirect::to(&format!("/month/{}", month_str)))
+    let redirect_to = input
+        .return_to
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| format!("/month/{}", date.format("%Y-%m")));
+    Ok(Redirect::to(&redirect_to))
 }
 
 /// POST /day/{date}/delete — delete a day entry.
 async fn delete_day(
     State(pool): State<PgPool>,
     Path(date_str): Path<String>,
+    Form(input): Form<DeleteDayInput>,
 ) -> Result<Redirect, Html<String>> {
     let date = parse_date(&date_str)?;
 
@@ -229,18 +244,20 @@ async fn delete_day(
         .await
         .map_err(internal_error)?;
 
-    let month_str = date.format("%Y-%m").to_string();
-    Ok(Redirect::to(&format!("/month/{}", month_str)))
+    let redirect_to = input
+        .return_to
+        .filter(|s| !s.is_empty())
+        .unwrap_or_else(|| format!("/month/{}", date.format("%Y-%m")));
+    Ok(Redirect::to(&redirect_to))
 }
 
 /// GET /day/{date}/add-block?index=N — return an HTMX fragment for a new empty block row.
 async fn add_block(
-    Path(date_str): Path<String>,
+    Path(_date_str): Path<String>,
     Query(query): Query<AddBlockQuery>,
 ) -> Html<String> {
     let tmpl = TimeBlockRowTemplate {
         index: query.index,
-        date: date_str,
         start_value: String::new(),
         end_value: String::new(),
         break_value: String::new(),

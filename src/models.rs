@@ -41,6 +41,7 @@ pub struct DayFormInput {
     pub starts: Vec<String>,
     pub ends: Vec<String>,
     pub breaks: Vec<String>,
+    pub return_to: Option<String>,
 }
 
 /// Fetch a single time entry by date.

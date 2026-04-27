@@ -14,8 +14,6 @@
     <div class="form-group remove-btn">
         <label>&nbsp;</label>
         <button type="button" class="btn btn-danger btn-sm"
-                hx-delete="/day/{{ date }}/block/{{ index }}"
-                hx-target="#block-{{ index }}"
-                hx-swap="outerHTML">✕</button>
+                onclick="this.closest('.block-row').remove()">✕</button>
     </div>
 </div>

@@ -14,9 +14,9 @@
     <div class="flex-between mb-1">
         <div class="card-title">Today — {{ today_weekday }}, {{ today_date }}</div>
         {% if !today_exists %}
-        <a href="/day/{{ today_date }}" class="btn btn-primary btn-sm">+ Log Today</a>
+        <a href="/day/{{ today_date }}?from=dashboard" class="btn btn-primary btn-sm">+ Log Today</a>
         {% else %}
-        <a href="/day/{{ today_date }}" class="btn btn-secondary btn-sm">Edit</a>
+        <a href="/day/{{ today_date }}?from=dashboard" class="btn btn-secondary btn-sm">Edit</a>
         {% endif %}
     </div>
     {% if today_exists %}

@@ -8,12 +8,14 @@
     {% if exists %}
     <form method="POST" action="/day/{{ date }}/delete"
           onsubmit="return confirm('Delete this day entry?')">
+        <input type="hidden" name="return_to" value="{{ return_to }}">
         <button type="submit" class="btn btn-danger btn-sm">Delete</button>
     </form>
     {% endif %}
 </div>
 
 <form method="POST" action="/day/{{ date }}">
+    <input type="hidden" name="return_to" value="{{ return_to }}">
     <div class="card">
         <div class="form-group">
             <label>Target Hours (Soll)</label>
@@ -40,9 +42,7 @@
                 <div class="form-group remove-btn">
                     <label>&nbsp;</label>
                     <button type="button" class="btn btn-danger btn-sm"
-                            hx-delete="/day/{{ date }}/block/{{ block.index }}"
-                            hx-target="#block-{{ block.index }}"
-                            hx-swap="outerHTML">✕</button>
+                            onclick="this.closest('.block-row').remove()">✕</button>
                 </div>
             </div>
             {% endfor %}
@@ -79,6 +79,6 @@
     {% endif %}
 
     <button type="submit" class="btn btn-primary">Save</button>
-    <a href="/month/{{ month_str }}" class="btn btn-secondary">Cancel</a>
+    <a href="{{ return_to }}" class="btn btn-secondary">Cancel</a>
 </form>
 {% endblock %}
