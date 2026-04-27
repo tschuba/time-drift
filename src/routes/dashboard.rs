@@ -7,14 +7,11 @@ use sqlx::PgPool;
 use crate::models;
 use crate::services::time;
 
+use super::day::BlockView;
+
 // ---------------------------------------------------------------------------
 // View structs
 // ---------------------------------------------------------------------------
-
-pub struct TodayBlockView {
-    pub start: String,
-    pub end: String,
-}
 
 pub struct RecentDayView {
     pub date: String,
@@ -41,7 +38,11 @@ struct DashboardTemplate {
     today_date: String,
     today_weekday: String,
     today_exists: bool,
-    today_blocks: Vec<TodayBlockView>,
+    // Inline form fields for today's entry
+    today_target_hours: String,
+    today_form_blocks: Vec<BlockView>,
+    today_form_blocks_len: usize,
+    // Computed display
     today_actual: String,
     today_saldo: String,
     today_saldo_positive: bool,
@@ -69,12 +70,12 @@ pub async fn handler(
     let saldo_positive = total_saldo > Decimal::ZERO;
     let saldo_negative = total_saldo < Decimal::ZERO;
 
-    // Today's entry
+    // Today's entry — build form-ready data
     let today_day = models::get_day_with_blocks(&pool, today)
         .await
         .map_err(internal_error)?;
 
-    let (today_exists, today_blocks, today_actual, today_saldo, today_saldo_positive, today_saldo_negative) =
+    let (today_exists, today_target_hours, today_form_blocks, today_actual, today_saldo, today_saldo_positive, today_saldo_negative) =
         match today_day {
             Some(d) => {
                 let block_tuples: Vec<_> = d
@@ -83,15 +84,22 @@ pub async fn handler(
                     .map(|b| (b.start_time, b.end_time, b.break_hours))
                     .collect();
 
-                let blocks_view: Vec<TodayBlockView> = d
+                let form_blocks: Vec<BlockView> = d
                     .blocks
                     .iter()
-                    .map(|b| TodayBlockView {
-                        start: b.start_time.format("%H:%M").to_string(),
-                        end: b
+                    .enumerate()
+                    .map(|(i, b)| BlockView {
+                        index: i,
+                        start_value: b.start_time.format("%H:%M").to_string(),
+                        end_value: b
                             .end_time
                             .map(|t| t.format("%H:%M").to_string())
                             .unwrap_or_default(),
+                        break_value: if b.break_hours == Decimal::ZERO {
+                            String::new()
+                        } else {
+                            b.break_hours.normalize().to_string()
+                        },
                     })
                     .collect();
 
@@ -107,16 +115,18 @@ pub async fn handler(
                 let sp = saldo.map(|s| s > Decimal::ZERO).unwrap_or(false);
                 let sn = saldo.map(|s| s < Decimal::ZERO).unwrap_or(false);
 
-                (true, blocks_view, actual_str, saldo_str, sp, sn)
+                (true, d.entry.target_hours.normalize().to_string(), form_blocks, actual_str, saldo_str, sp, sn)
             }
-            None => (
-                false,
-                Vec::new(),
-                String::new(),
-                String::new(),
-                false,
-                false,
-            ),
+            None => {
+                let default_target = time::default_target_hours(today);
+                let form_blocks = vec![BlockView {
+                    index: 0,
+                    start_value: String::new(),
+                    end_value: String::new(),
+                    break_value: String::new(),
+                }];
+                (false, default_target.normalize().to_string(), form_blocks, String::new(), String::new(), false, false)
+            },
         };
 
     // Last 7 days
@@ -191,6 +201,8 @@ pub async fn handler(
         });
     }
 
+    let today_form_blocks_len = today_form_blocks.len();
+
     let tmpl = DashboardTemplate {
         formatted_saldo,
         saldo_positive,
@@ -198,7 +210,9 @@ pub async fn handler(
         today_date,
         today_weekday,
         today_exists,
-        today_blocks,
+        today_target_hours,
+        today_form_blocks,
+        today_form_blocks_len,
         today_actual,
         today_saldo,
         today_saldo_positive,

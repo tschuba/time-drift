@@ -13,29 +13,62 @@
 <div class="card">
     <div class="flex-between mb-1">
         <div class="card-title">Today — {{ today_weekday }}, {{ today_date }}</div>
-        {% if !today_exists %}
-        <a href="/day/{{ today_date }}?from=dashboard" class="btn btn-primary btn-sm">+ Log Today</a>
-        {% else %}
-        <a href="/day/{{ today_date }}?from=dashboard" class="btn btn-secondary btn-sm">Edit</a>
-        {% endif %}
+        <a href="/day/{{ today_date }}?from=dashboard" class="btn btn-secondary btn-sm">Full editor</a>
     </div>
-    {% if today_exists %}
-    <div class="flex-between">
-        <div>
-            {% for block in today_blocks %}
-            <span class="text-muted">{{ block.start }}–{{ block.end }}</span>{% if !loop.last %}, {% endif %}
+
+    <form method="POST" action="/day/{{ today_date }}">
+        <input type="hidden" name="return_to" value="/">
+
+        <div class="flex gap-1 mb-1" style="align-items: end;">
+            <div class="form-group" style="margin-bottom: 0; max-width: 100px;">
+                <label>Target (h)</label>
+                <input type="number" name="target_hours" value="{{ today_target_hours }}"
+                       step="0.5" min="0" max="24">
+            </div>
+            {% if today_exists && today_actual != "" %}
+            <div style="padding-bottom: 0.5rem;">
+                <span class="text-muted">Actual:</span> <strong>{{ today_actual }}h</strong>
+                <span class="saldo-badge saldo-small {% if today_saldo_positive %}saldo-positive{% elif today_saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
+                    {{ today_saldo }}
+                </span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="blocks-container">
+            {% for block in today_form_blocks %}
+            <div class="block-row" id="block-{{ block.index }}">
+                <div class="form-group">
+                    <label>Start</label>
+                    <input type="time" name="starts" value="{{ block.start_value }}" required>
+                </div>
+                <div class="form-group">
+                    <label>End</label>
+                    <input type="time" name="ends" value="{{ block.end_value }}">
+                </div>
+                <div class="form-group break-input">
+                    <label>Break (h)</label>
+                    <input type="number" name="breaks" value="{{ block.break_value }}" step="0.25" min="0">
+                </div>
+                <div class="form-group remove-btn">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn btn-danger btn-sm"
+                            onclick="this.closest('.block-row').remove()">✕</button>
+                </div>
+            </div>
             {% endfor %}
         </div>
-        <div>
-            <strong>{{ today_actual }}h</strong>
-            <span class="saldo-badge saldo-small {% if today_saldo_positive %}saldo-positive{% elif today_saldo_negative %}saldo-negative{% else %}saldo-zero{% endif %}">
-                {{ today_saldo }}
-            </span>
+
+        <div class="flex gap-1 mt-1">
+            <button type="button" class="btn btn-secondary btn-sm"
+                    hx-get="/day/{{ today_date }}/add-block?index={{ today_form_blocks_len }}"
+                    hx-target="#blocks-container"
+                    hx-swap="beforeend">
+                + Add Block
+            </button>
+            <button type="submit" class="btn btn-primary btn-sm">Save</button>
         </div>
-    </div>
-    {% else %}
-    <p class="text-muted">No entry yet.</p>
-    {% endif %}
+    </form>
 </div>
 
 <div class="card">
