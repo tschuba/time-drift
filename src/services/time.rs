@@ -5,9 +5,12 @@ use rust_decimal::Decimal;
 /// Returns None if end_time is None (block still running).
 pub fn block_actual_hours(start: NaiveTime, end: Option<NaiveTime>, break_hours: Decimal) -> Option<Decimal> {
     let end = end?;
-    let duration = end.signed_duration_since(start);
-    let total_seconds = Decimal::from(duration.num_seconds());
-    let hours = total_seconds / Decimal::from(3600);
+    let mut seconds = end.signed_duration_since(start).num_seconds();
+    // Handle blocks ending at midnight (stored as 00:00:00, end < start)
+    if seconds < 0 {
+        seconds += 86400;
+    }
+    let hours = Decimal::from(seconds) / Decimal::from(3600);
     Some(hours - break_hours)
 }
 

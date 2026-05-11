@@ -214,11 +214,18 @@ pub async fn get_total_saldo(pool: &PgPool) -> sqlx::Result<Decimal> {
     let row: (Decimal,) = sqlx::query_as(
         "SELECT COALESCE(SUM(
             (SELECT COALESCE(SUM(
-                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                EXTRACT(EPOCH FROM (
+                    CASE WHEN b.end_time < b.start_time
+                        THEN b.end_time + interval '24 hours' - b.start_time
+                        ELSE b.end_time - b.start_time
+                    END
+                )) / 3600.0 - b.break_hours
             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
             - e.target_hours
         ), 0) as saldo
-        FROM time_entries e",
+        FROM time_entries e
+        WHERE NOT EXISTS (SELECT 1 FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NULL)
+           OR EXISTS     (SELECT 1 FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)",
     )
     .fetch_one(pool)
     .await?;
@@ -231,12 +238,21 @@ pub async fn get_running_saldo_up_to(pool: &PgPool, date: NaiveDate) -> sqlx::Re
     let row: (Decimal,) = sqlx::query_as(
         "SELECT COALESCE(SUM(
             (SELECT COALESCE(SUM(
-                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                EXTRACT(EPOCH FROM (
+                    CASE WHEN b.end_time < b.start_time
+                        THEN b.end_time + interval '24 hours' - b.start_time
+                        ELSE b.end_time - b.start_time
+                    END
+                )) / 3600.0 - b.break_hours
             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
             - e.target_hours
         ), 0) as saldo
         FROM time_entries e
-        WHERE e.date <= $1",
+        WHERE e.date <= $1
+          AND (
+            NOT EXISTS (SELECT 1 FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NULL)
+            OR EXISTS  (SELECT 1 FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
+          )",
     )
     .bind(date)
     .fetch_one(pool)
@@ -372,7 +388,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
         "SELECT COALESCE(AVG(actual), 0)
          FROM (
              SELECT (SELECT COALESCE(SUM(
-                 EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                 EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
              ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as actual
              FROM time_entries e
              WHERE e.target_hours > 0
@@ -386,7 +402,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
     let avg_saldo_row: (Decimal,) = sqlx::query_as(
         "SELECT COALESCE(AVG(
             (SELECT COALESCE(SUM(
-                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
             - e.target_hours
         ), 0)
@@ -399,7 +415,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
     let month_ot_row: (Decimal,) = sqlx::query_as(
         "SELECT COALESCE(SUM(
             (SELECT COALESCE(SUM(
-                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
             - e.target_hours
         ), 0)
@@ -415,7 +431,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
     let year_ot_row: (Decimal,) = sqlx::query_as(
         "SELECT COALESCE(SUM(
             (SELECT COALESCE(SUM(
-                EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
             ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
             - e.target_hours
         ), 0)
@@ -435,7 +451,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
          GROUP BY EXTRACT(ISODOW FROM e.date), TO_CHAR(e.date, 'Day')
          ORDER BY AVG(
              (SELECT COALESCE(SUM(
-                 EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                 EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
              ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
          ) DESC
          LIMIT 1",
@@ -455,7 +471,7 @@ pub async fn get_analytics_summary(pool: &PgPool) -> sqlx::Result<AnalyticsSumma
          FROM (
              SELECT e.target_hours,
                     (SELECT COALESCE(SUM(
-                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                        EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
                     ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as actual
              FROM time_entries e
              WHERE e.target_hours > 0
@@ -484,7 +500,7 @@ pub async fn get_saldo_trend(
         "SELECT e.date,
                 SUM(
                     (SELECT COALESCE(SUM(
-                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                        EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
                     ), 0) FROM time_blocks b WHERE b.entry_id = e2.id AND b.end_time IS NOT NULL)
                     - e2.target_hours
                 ) as cumulative_saldo
@@ -519,7 +535,7 @@ pub async fn get_monthly_hours(
         "SELECT TO_CHAR(e.date, 'YYYY-MM') as label,
                 COALESCE(SUM(
                     (SELECT COALESCE(SUM(
-                        EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                        EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
                     ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL)
                 ), 0) as actual_hours,
                 COALESCE(SUM(e.target_hours), 0) as target_hours
@@ -552,7 +568,7 @@ pub async fn get_heatmap_data(pool: &PgPool, year: i32) -> sqlx::Result<Vec<Heat
     let rows: Vec<(NaiveDate, Decimal)> = sqlx::query_as(
         "SELECT e.date,
                 (SELECT COALESCE(SUM(
-                    EXTRACT(EPOCH FROM (b.end_time - b.start_time)) / 3600.0 - b.break_hours
+                    EXTRACT(EPOCH FROM (CASE WHEN b.end_time < b.start_time THEN b.end_time + interval '24 hours' - b.start_time ELSE b.end_time - b.start_time END)) / 3600.0 - b.break_hours
                 ), 0) FROM time_blocks b WHERE b.entry_id = e.id AND b.end_time IS NOT NULL) as hours
          FROM time_entries e
          WHERE e.date >= $1 AND e.date <= $2
