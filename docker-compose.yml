@@ -1,29 +1,31 @@
 services:
   app:
-    image: ghcr.io/${GHCR_USER:-local}/time-drift:${TAG:-latest}
-    ports:
-      - "80:80"
+    image: 'ghcr.io/tschuba/time-drift:${TAG:-latest}'
+    expose:
+      - 80
     environment:
-      - DATABASE_URL=postgres://timedrift:${DB_PASSWORD}@db:5432/timedrift
+      - SERVICE_PASSWORD_64_DB
+      - 'DATABASE_URL=postgres://timedrift:${SERVICE_PASSWORD_64_DB}@db:5432/timedrift'
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
-
+    labels:
+      - 'traefik.http.middlewares.authentik-auth@file'
   db:
-    image: postgres:16-alpine
+    image: 'postgres:16-alpine'
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - 'pgdata:/var/lib/postgresql/data'
     environment:
+      - SERVICE_PASSWORD_64_DB
       - POSTGRES_DB=timedrift
       - POSTGRES_USER=timedrift
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - 'POSTGRES_PASSWORD=${SERVICE_PASSWORD_64_DB}'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U timedrift"]
       interval: 5s
       timeout: 5s
       retries: 5
     restart: unless-stopped
-
 volumes:
   pgdata:
