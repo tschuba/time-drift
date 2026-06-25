@@ -13,10 +13,15 @@ Accumulates Soll (target hours) from continuation rows into the entry target.
 
 import sys
 import uuid
-from datetime import datetime, time
+from datetime import datetime, time, date
 from decimal import Decimal
 
 import openpyxl
+
+# Rows with no Ist/Soll formula and no times at all - incomplete in this export,
+# not a real day. Excluded entirely so they don't show up as a -Soll day in the
+# saldo. Re-check against the final/newer export before the production import.
+SKIP_DATES = {date(2026, 3, 18)}
 
 
 def main():
@@ -31,6 +36,7 @@ def main():
     # Collect and merge all days: date -> (target, note, [(start, end, break)])
     days_map = {}  # date -> [target, note, blocks]
     current_date = None
+    skip_current = False
 
     for row in ws.iter_rows(min_row=3, values_only=True):
         date_val = row[0]
@@ -45,9 +51,14 @@ def main():
         if date_val is not None:
             if not isinstance(date_val, datetime):
                 current_date = None
+                skip_current = False
                 continue
 
             current_date = date_val.date()
+            skip_current = current_date in SKIP_DATES
+            if skip_current:
+                continue
+
             soll = Decimal(str(soll_val)) if soll_val is not None else Decimal("8.0")
             if current_date not in days_map:
                 days_map[current_date] = [soll, note_val, []]
@@ -58,14 +69,14 @@ def main():
                     days_map[current_date][1] = note_val
         else:
             # Continuation row
-            if current_date is None:
+            if current_date is None or skip_current:
                 continue
             if start_val is None and end_val is None and not soll_val:
                 continue
             if soll_val:
                 days_map[current_date][0] += Decimal(str(soll_val))
 
-        if start_val is None:
+        if skip_current or start_val is None:
             continue
 
         start_str = format_time(start_val)
