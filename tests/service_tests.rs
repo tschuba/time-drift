@@ -146,3 +146,56 @@ fn test_format_saldo_display() {
     assert_eq!(time_drift::services::time::format_saldo(dec!(-2.0)), "-2.00");
     assert_eq!(time_drift::services::time::format_saldo(dec!(0)), "±0.00");
 }
+
+/// Regression test for a bug where the SQL aggregate saldo queries computed
+/// midnight-crossing blocks via `end_time + interval '24 hours' - start_time`,
+/// which silently wraps back to the same TIME instead of extending past
+/// midnight, giving a result 24 hours off. Uses a far-past synthetic date so
+/// it's isolated from any real data, and brackets get_running_saldo_up_to
+/// before/after that date so the assertion doesn't depend on what else is in
+/// the database.
+#[tokio::test]
+async fn test_get_total_saldo_handles_midnight_crossing_block() {
+    use chrono::NaiveDate;
+    use time_drift::{config::Config, db, models};
+
+    let config = Config::from_env();
+    let pool = db::create_pool(&config.database_url).await;
+    db::run_migrations(&pool).await;
+
+    let test_date = NaiveDate::from_ymd_opt(1900, 1, 1).unwrap();
+    let before_date = NaiveDate::from_ymd_opt(1899, 12, 31).unwrap();
+
+    // Clean up any leftovers from a previous failed run before starting.
+    let _ = models::delete_entry(&pool, test_date).await;
+
+    let target = dec!(8.0);
+    let entry = models::upsert_entry(&pool, test_date, target, None)
+        .await
+        .expect("upsert_entry");
+    models::insert_block(
+        &pool,
+        entry.id,
+        NaiveTime::from_hms_opt(23, 0, 0).unwrap(),
+        Some(NaiveTime::from_hms_opt(0, 0, 0).unwrap()),
+        dec!(0),
+        0,
+    )
+    .await
+    .expect("insert_block");
+
+    let saldo_before = models::get_running_saldo_up_to(&pool, before_date)
+        .await
+        .expect("get_running_saldo_up_to before");
+    let saldo_after = models::get_running_saldo_up_to(&pool, test_date)
+        .await
+        .expect("get_running_saldo_up_to after");
+
+    models::delete_entry(&pool, test_date)
+        .await
+        .expect("delete_entry cleanup");
+
+    // 23:00 -> 00:00 is correctly 1 hour, not -23 hours (the wraparound bug).
+    let delta = saldo_after - saldo_before;
+    assert_eq!(delta, dec!(1.0) - target);
+}
