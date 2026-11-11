@@ -21,18 +21,21 @@ The previous Rust/Axum implementation lives in [`legacy/`](legacy/) for referenc
 
 ## Development
 
-Requires Node ≥ 24, pnpm and a Postgres database.
+Requires Node ≥ 24, pnpm and Docker.
 
 ```sh
 pnpm install
-echo 'DATABASE_URL=postgres://timedrift:timedrift@localhost:5432/timedrift' > .env
-pnpm dev          # server (watch) + Tailwind (watch)
+pnpm stack:up     # local Postgres on :5432 (matches the default DATABASE_URL)
+pnpm dev          # server (watch) + Tailwind (watch)  →  http://localhost:3000
 ```
+
+`pnpm stack:down` stops the database (data is kept in a volume; add `-v` via `docker compose -f docker-compose.dev.yml down -v` to wipe it). An optional `.env` overrides defaults.
 
 Migrations in `drizzle/` run automatically on server start. After changing `src/db/schema/`, run `pnpm db:generate`.
 
 | Script | |
 |---|---|
+| `pnpm stack:up` / `stack:down` | Start / stop the local Postgres |
 | `pnpm dev` | Dev server with reload |
 | `pnpm build` | Bundle to `dist/` and build CSS |
 | `pnpm start` | Run the built server (`PORT`, default 80) |
