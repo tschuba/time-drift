@@ -1,4 +1,5 @@
-/target
+target/
+/dist
 .env
 *.swp
 *.swo
@@ -6,3 +7,7 @@
 
 # Ignore Agentic AI tools
 tools/
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
+node_modules
