@@ -1,6 +1,7 @@
 import Decimal from "decimal.js";
 import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
+import { raw } from "hono/html";
 import { ErrorPage, Layout, SaldoBadge } from "../components/layout.js";
 import { addBlock, deleteBlock, deleteDay, getDay, saveEntry, updateBlock, type BlockInput, type BlockRow } from "../db/queries.js";
 import { dateLong, t, weekday as weekdayName } from "../lib/i18n.js";
@@ -43,13 +44,15 @@ const Timeline = ({ date, blocks }: { date: string; blocks: BlockRow[] }) => {
           const m = Math.max(0, Math.round(end - s - Number(b.breakHours) * 60));
           const dur = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
           return (
-            <button type="button" hx-get={`/day/${date}/block/${b.id}/edit`} {...target}
+            <button type="button" data-block={b.id} hx-get={`/day/${date}/block/${b.id}/edit`} {...target}
+              hx-on--before-request={`if(document.querySelector('#block-editor form[hx-post$="/block/${b.id}"]')){event.preventDefault();htmx.ajax('GET','/day/${date}/block-form',{target:'#block-editor',swap:'innerHTML'})}`}
               class={`@container absolute top-1 bottom-1 rounded-field bg-primary text-primary-content text-xs px-1 overflow-hidden whitespace-nowrap hover:brightness-110 focus-visible:outline`}
               style={`left:${pct(s)}%;width:${pct(end - s + lo)}%;${e === null ? "background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgb(255 255 255/.25) 6px 12px)" : ""}`}
-              title={`${hhmm(b.startTime)} – ${e === null ? t("day.running") : hhmm(b.endTime)} · ${dur}`}>
+              title={`${hhmm(b.startTime)} – ${e === null ? t("day.running") : hhmm(b.endTime)} · ${dur}${Number(b.breakHours) > 0 ? ` · ${t("day.breakShown", { h: num(b.breakHours) })}` : ""}`}>
               {/* Detail by segment width: range + duration, then duration only, then nothing. */}
               <span class="hidden @[9rem]:inline">{hhmm(b.startTime)}–{e === null ? <span class="badge badge-warning badge-sm font-bold uppercase gap-1 align-middle"><span class="inline-block size-1.5 rounded-full bg-current animate-pulse" />{t("day.running")}</span> : hhmm(b.endTime)} · </span>
               <span class="hidden @[3rem]:inline font-semibold">{dur}</span>
+              {Number(b.breakHours) > 0 && <span class="hidden @[14rem]:inline"> · {t("day.breakShown", { h: num(b.breakHours) })}</span>}
             </button>
           );
         })}
@@ -78,7 +81,8 @@ export const Lbl = ({ children }: { children: string }) => <span class="hidden s
 /** One editor under the bar: new block (no id) or the selected segment. */
 export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date: string; id?: string; start?: string; end?: string; brk?: string }) => (
   <form class="p-2 rounded-box bg-base-100 border border-base-300" hx-post={id ? `/day/${date}/block/${id}` : `/day/${date}/blocks`} hx-swap="none">
-    {id && <div class="font-semibold text-sm mb-1">{t("edit")}</div>}
+    {/* Highlight the bar being edited; the style disappears with the form. */}
+    {id && <style>{raw(`[data-block="${id}"]{box-shadow:inset 0 0 0 3px light-dark(#0e7490,#facc15),inset 0 0 0 5px var(--color-base-100)}`)}</style>}
     <div class="flex flex-wrap items-end gap-2">
       <label class="floating-label flex-1 min-w-24">
         <span>{t("start")}</span>

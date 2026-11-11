@@ -24,12 +24,27 @@ dashboardRoutes.get("/", async (c) => {
   const blocks = todayDay?.blocks ?? [];
   const actual = todayDay ? dayActualHours(toBlocks(todayDay)) : null;
 
+  // Running blocks count up to now, so the stat is live.
+  const nowT = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
+  const todayActual = dayActualHours(toBlocks({ blocks }).map((b) => ({ ...b, end: b.end ?? nowT })));
+  const todaySaldo = (todayActual ?? new Decimal(0)).minus(target);
+  const todayBreak = blocks.reduce((s, b) => s.plus(b.breakHours), new Decimal(0));
+  const cls = (v: Decimal) => (v.gt(0) ? "text-success" : v.lt(0) ? "text-error" : "");
+
   return c.html(
     <Layout title={t("nav.dashboard")} nav="/">
       <div class="stats bg-base-200 w-full mb-4">
         <div class="stat">
           <div class="stat-title">{t("dash.running")}</div>
           <div class={`stat-value ${total.gt(0) ? "text-success" : total.lt(0) ? "text-error" : ""}`}>{formatHM(total, true)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">{t("dash.todaySaldo")}</div>
+          <div class={`stat-value ${cls(todaySaldo)}`}>{formatHM(todaySaldo, true)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">{t("dash.todayBreak")}</div>
+          <div class="stat-value">{formatHM(todayBreak)}</div>
         </div>
       </div>
 
