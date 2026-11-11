@@ -2,7 +2,7 @@ import type { Child } from "hono/jsx";
 import { statSync } from "node:fs";
 import Decimal from "decimal.js";
 import { currentPath, lang, t } from "../lib/i18n.js";
-import { formatSaldo } from "../lib/time.js";
+import { formatHM } from "../lib/time.js";
 
 // Cache-bust static assets by mtime, computed once at startup (rebuilt assets need a restart).
 const ver = (f: string) => { try { return Math.floor(statSync(`public/${f}`).mtimeMs).toString(36); } catch { return "0"; } };
@@ -46,7 +46,7 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
 
 export const SaldoBadge = ({ value }: { value: Decimal | null }) => (
   <span class={`badge badge-sm sm:badge-md ${value?.gt(0) ? "badge-success" : value?.lt(0) ? "badge-error" : "badge-ghost"}`}>
-    {value ? formatSaldo(value) : "—"}
+    {value ? formatHM(value, true) : "—"}
   </span>
 );
 

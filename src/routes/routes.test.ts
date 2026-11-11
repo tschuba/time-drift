@@ -7,6 +7,11 @@ vi.mock("../db/queries.js", () => ({
   getPage: vi.fn(),
   getTotalSaldo: vi.fn(),
   saveDay: vi.fn(),
+  saveEntry: vi.fn(),
+  addBlock: vi.fn(),
+  updateBlock: vi.fn(),
+  deleteBlock: vi.fn(),
+  getBlock: vi.fn(),
   deleteDay: vi.fn(),
 }));
 
@@ -48,22 +53,60 @@ describe("day", () => {
   it("shows actual and saldo", async () => {
     vi.mocked(q.getDay).mockResolvedValue(day("2026-05-11", "08:00:00", "17:00:00"));
     const html = await (await app.request("/day/2026-05-11")).text();
-    expect(html).toContain("8.50h");
-    expect(html).toContain("+0.50");
+    expect(html).toContain("08:30");
+    expect(html).toContain("+00:30");
   });
 
-  it("saves parsed blocks, skips invalid starts, normalizes break", async () => {
-    const res = await post("/day/2026-05-11", {
-      target_hours: "8", note: "  ", starts: ["8:00", "bad"], ends: ["1700", ""], breaks: ["0.5", "1"], return_to: "/month/2026-05",
-    });
+  it("saves entry fields only, blank note -> null", async () => {
+    const res = await post("/day/2026-05-11", { target_hours: "8", note: "  ", return_to: "/month/2026-05" });
     expect(res.status).toBe(303);
     expect(res.headers.get("location")).toBe("/month/2026-05");
-    expect(q.saveDay).toHaveBeenCalledWith("2026-05-11", "8", null, [{ start: "08:00", end: "17:00", breakHours: "0.5" }]);
+    expect(q.saveEntry).toHaveBeenCalledWith("2026-05-11", "8", null);
   });
 
-  it("accepts a single block (non-array form values)", async () => {
-    await post("/day/2026-05-11", { target_hours: "8", starts: "09:00", ends: "", breaks: "" });
-    expect(q.saveDay).toHaveBeenCalledWith("2026-05-11", "8", null, [{ start: "09:00", end: null, breakHours: "0" }]);
+  it("adds a block, parsing times and break", async () => {
+    const res = await post("/day/2026-05-11/blocks", { start: "8:00", end: "1700", brk: "0.5" });
+    expect(res.headers.get("hx-refresh")).toBe("true");
+    expect(q.addBlock).toHaveBeenCalledWith("2026-05-11", "8", { start: "08:00", end: "17:00", breakHours: "0.5" });
+  });
+
+  it("adds a running block without end/break", async () => {
+    await post("/day/2026-05-11/blocks", { start: "09:00", end: "", brk: "" });
+    expect(q.addBlock).toHaveBeenCalledWith("2026-05-11", "8", { start: "09:00", end: null, breakHours: "0" });
+  });
+
+  it("rejects a block without valid start or with bad break", async () => {
+    expect((await post("/day/2026-05-11/blocks", { start: "bad" })).status).toBe(400);
+    expect((await post("/day/2026-05-11/blocks", { start: "08:00", brk: "-1" })).status).toBe(400);
+    expect(q.addBlock).not.toHaveBeenCalled();
+  });
+
+  it("updates and deletes a block by id, rejects non-uuid ids", async () => {
+    const id = "123e4567-e89b-12d3-a456-426614174000";
+    await post(`/day/2026-05-11/block/${id}`, { start: "08:00", end: "12:00", brk: "" });
+    expect(q.updateBlock).toHaveBeenCalledWith(id, { start: "08:00", end: "12:00", breakHours: "0" });
+    await post(`/day/2026-05-11/block/${id}/delete`, {});
+    expect(q.deleteBlock).toHaveBeenCalledWith(id);
+    expect((await post("/day/2026-05-11/block/nope/delete", {})).status).toBe(400);
+  });
+
+  it("prefills new block start with the end of the last block", async () => {
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-11", "08:00:00", "12:00:00"));
+    expect(await (await app.request("/day/2026-05-11/block-form")).text()).toContain('value="12:00"');
+  });
+
+  it("edit editor offers delete", async () => {
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-11", "08:00:00", "12:00:00"));
+    expect(await (await app.request("/day/2026-05-11/block/b/edit")).text()).toContain("/block/b/delete");
+    expect((await app.request("/day/2026-05-11/block/zz/edit")).status).toBe(404);
+  });
+
+  it("renders saved blocks as timeline segments plus a new-block editor", async () => {
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-11", "08:00:00", "17:00:00"));
+    const html = await (await app.request("/day/2026-05-11")).text();
+    expect(html).toContain("08:00–17:00");
+    expect(html).toContain("/day/2026-05-11/block/b/edit");
+    expect(html).toContain("/day/2026-05-11/blocks");
   });
 
   it("rejects bad target hours", async () => {
@@ -88,8 +131,8 @@ describe("month", () => {
     // Feb 2026: 20 workdays x 8h = 160 target, one 9h day logged.
     vi.mocked(q.getRange).mockResolvedValue([day("2026-02-02", "08:00:00", "17:30:00")]);
     const html = await (await app.request("/month/2026-02")).text();
-    expect(html).toContain("160.00");
-    expect(html).toContain("-151.00");
+    expect(html).toContain("160:00");
+    expect(html).toContain("-151:00");
     expect(html).toContain("March 2026");
   });
 
@@ -103,7 +146,7 @@ describe("dashboard", () => {
   it("renders running saldo and 7 days", async () => {
     vi.mocked(q.getTotalSaldo).mockResolvedValue(new Decimal("3.5"));
     const html = await (await app.request("/")).text();
-    expect(html).toContain("+3.50h");
+    expect(html).toContain("+03:30");
     expect((html.match(/href="\/day\/\d{4}-\d{2}-\d{2}"/g) ?? []).length).toBe(7);
   });
 });
@@ -135,7 +178,7 @@ describe("analytics", () => {
       day("2026-05-13", "08:00:00", null), // running -> 0 actual
     ]);
     const html = await (await app.request("/analytics?range=all&heatmap_year=2026")).text();
-    expect(html).toContain("6.25h"); // avg of workdays with actual > 0: (8.5 + 4) / 2
+    expect(html).toContain("06:15"); // avg of workdays with actual > 0: (8.5 + 4) / 2
     expect(html).toContain("Monday");
     expect(html).toContain("33.3%"); // 1 of 3 workdays over target
   });

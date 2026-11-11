@@ -19,3 +19,13 @@ describe("time", () => {
     expect(parseTimeInput("2460")).toBeNull();
   });
 });
+
+describe("formatHM", () => {
+  it("formats HH:MM, rounds to the minute, signs", async () => {
+    const { formatHM } = await import("./time.js");
+    expect(formatHM("7.83")).toBe("07:50");
+    expect(formatHM("0.5", true)).toBe("+00:30");
+    expect(formatHM("-4", true)).toBe("-04:00");
+    expect(formatHM("0", true)).toBe("±00:00");
+  });
+});

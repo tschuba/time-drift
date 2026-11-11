@@ -4,10 +4,10 @@ import { Layout } from "../components/layout.js";
 import { getRange } from "../db/queries.js";
 import { BarChart, Heatmap, LineChart } from "../lib/charts.js";
 import { dec, t, weekday } from "../lib/i18n.js";
-import { blockActualHours } from "../lib/time.js";
+import { blockActualHours, formatHM } from "../lib/time.js";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-const sign = (n: number) => dec(n > 0 ? `+${n.toFixed(2)}` : n < 0 ? n.toFixed(2) : "±0.00");
+const sign = (n: number) => formatHM(n, true);
 const tone = (n: number) => (n > 0 ? "text-success" : n < 0 ? "text-error" : "");
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0);
 
@@ -46,7 +46,7 @@ analyticsRoutes.get("/analytics", async (c) => {
   const heat = new Map(days.filter((d) => d.date.startsWith(`${heatYear}-`)).map((d) => [d.date, d.actual]));
 
   const stats: [string, string, number | null][] = [
-    [t("an.avgHours"), `${dec(avg(workdays.map((d) => d.actual).filter((a) => a > 0)).toFixed(2))}h`, null],
+    [t("an.avgHours"), formatHM(avg(workdays.map((d) => d.actual).filter((a) => a > 0))), null],
     [t("an.avgSaldo"), sign(avg(days.map((d) => d.saldo))), avg(days.map((d) => d.saldo))],
     [t("an.thisMonth"), sign(sumSaldo(today.slice(0, 7))), sumSaldo(today.slice(0, 7))],
     [t("an.thisYear"), sign(sumSaldo(today.slice(0, 4))), sumSaldo(today.slice(0, 4))],

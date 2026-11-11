@@ -57,3 +57,11 @@ export function formatSaldo(s: Decimal.Value): string {
   if (d.lt(0)) return dec(d.toFixed(2));
   return dec("±0.00");
 }
+
+/** Hours as HH:MM, rounded to the minute. signed adds +/-/± like formatSaldo. */
+export function formatHM(h: Decimal.Value, signed = false): string {
+  const d = new Decimal(h);
+  const m = d.abs().mul(60).toDecimalPlaces(0).toNumber();
+  const hm = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  return !signed ? hm : m === 0 ? `±${hm}` : `${d.lt(0) ? "-" : "+"}${hm}`;
+}
