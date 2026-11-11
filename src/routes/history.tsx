@@ -2,9 +2,9 @@ import Decimal from "decimal.js";
 import { Hono } from "hono";
 import { Layout, SaldoBadge } from "../components/layout.js";
 import { getPage, getTotalSaldo } from "../db/queries.js";
+import { dateShort, t, weekday } from "../lib/i18n.js";
 import { dailySaldo, dayActualHours, formatHours } from "../lib/time.js";
 
-const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const PAGE_SIZE = 50;
 const validDate = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? s : undefined);
 
@@ -20,17 +20,22 @@ historyRoutes.get("/history", async (c) => {
   const qs = (p: number) => `/history?page=${p}${from ? `&from=${from}` : ""}${to ? `&to=${to}` : ""}`;
 
   return c.html(
-    <Layout title="History">
-      <h1 class="text-2xl font-bold mb-4">History</h1>
-      <form method="get" action="/history" class="flex gap-2 items-end mb-4">
-        <label class="form-control"><span class="label-text">From</span><input class="input input-bordered" type="date" name="from" value={from ?? ""} /></label>
-        <label class="form-control"><span class="label-text">To</span><input class="input input-bordered" type="date" name="to" value={to ?? ""} /></label>
-        <button class="btn btn-primary btn-sm">Filter</button>
-        {(from || to) && <a href="/history" class="btn btn-sm">Clear</a>}
+    <Layout title={t("hist.title")} nav="/history">
+      <h1 class="text-2xl font-bold mb-4">{t("hist.title")}</h1>
+      <form method="get" action="/history" class="flex flex-wrap gap-2 items-end mb-4">
+        <label class="flex flex-col gap-1"><span class="text-sm opacity-70">{t("hist.from")}</span><input class="input input-bordered" type="date" name="from" value={from ?? ""} /></label>
+        <label class="flex flex-col gap-1"><span class="text-sm opacity-70">{t("hist.to")}</span><input class="input input-bordered" type="date" name="to" value={to ?? ""} /></label>
+        <button class="btn btn-primary btn-sm">{t("hist.filter")}</button>
+        {(from || to) && <a href="/history" class="btn btn-sm">{t("hist.clear")}</a>}
       </form>
-      <table class="table table-sm">
+      {days.length === 0 ? (
+        <div class="alert" role="status">
+          <span>{from || to ? t("hist.emptyRange") : t("hist.empty")} <a class="link" href="/">{t("hist.track")}</a></span>
+        </div>
+      ) : (
+      <div class="overflow-x-auto"><table class="table table-xs sm:table-sm">
         <thead>
-          <tr><th>Date</th><th class="text-right">Actual</th><th class="text-right">Target</th><th class="text-right">Saldo</th><th class="text-right">Running</th><th>Note</th></tr>
+          <tr><th>{t("date")}</th><th class="text-right">{t("actual")}</th><th class="text-right">{t("target")}</th><th class="text-right">{t("saldo")}</th><th class="text-right">{t("hist.running")}</th><th>{t("note")}</th></tr>
         </thead>
         <tbody>
           {days.map((d, i) => {
@@ -39,7 +44,7 @@ historyRoutes.get("/history", async (c) => {
             const wd = new Date(`${d.entry.date}T00:00:00Z`).getUTCDay();
             return (
               <tr class={wd === 0 || wd === 6 ? "opacity-60" : ""}>
-                <td><a class="link" href={`/day/${d.entry.date}`}>{WD[wd]} {d.entry.date.slice(5)}</a></td>
+                <td class="whitespace-nowrap"><a class="link" href={`/day/${d.entry.date}`}>{weekday(wd, "short")} {dateShort(d.entry.date)}</a></td>
                 <td class="text-right">{actual ? formatHours(actual) : "—"}</td>
                 <td class="text-right">{formatHours(target)}</td>
                 <td class="text-right"><SaldoBadge value={dailySaldo(actual, target)} /></td>
@@ -49,15 +54,16 @@ historyRoutes.get("/history", async (c) => {
             );
           })}
         </tbody>
-      </table>
+      </table></div>
+      )}
       {totalPages > 1 && (
-        <div class="flex gap-2 items-center justify-center my-4">
-          {page > 1 && <a class="btn btn-sm" href={qs(page - 1)}>← Prev</a>}
-          <span>Page {page} of {totalPages}</span>
-          {page < totalPages && <a class="btn btn-sm" href={qs(page + 1)}>Next →</a>}
+        <div class="join flex justify-center my-4">
+          <a class={`join-item btn btn-sm ${page > 1 ? "" : "btn-disabled"}`} href={qs(page - 1)}>{t("hist.prev")}</a>
+          <span class="join-item btn btn-sm no-animation pointer-events-none">{t("hist.page", { p: page, n: totalPages })}</span>
+          <a class={`join-item btn btn-sm ${page < totalPages ? "" : "btn-disabled"}`} href={qs(page + 1)}>{t("hist.next")}</a>
         </div>
       )}
-      <div class="text-center text-sm opacity-70">{total} entries total</div>
+      <div class="text-center text-sm opacity-70">{t("hist.total", { n: total })}</div>
     </Layout>,
   );
 });

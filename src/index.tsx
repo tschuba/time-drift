@@ -8,11 +8,14 @@ import { dashboardRoutes } from "./routes/dashboard.js";
 import { dayRoutes } from "./routes/day.js";
 import { historyRoutes } from "./routes/history.js";
 import { monthRoutes } from "./routes/month.js";
+import { i18n, langRoutes } from "./lib/i18n.js";
 import { logger } from "./lib/logger.js";
 
 export const app = new Hono();
+app.use("*", i18n);
 app.use("/static/*", serveStatic({ root: "./public", rewriteRequestPath: (p) => p.replace(/^\/static/, "") }));
 app.get("/health", (c) => c.text("ok"));
+app.route("/", langRoutes);
 app.route("/", dashboardRoutes);
 app.route("/", dayRoutes);
 app.route("/", historyRoutes);

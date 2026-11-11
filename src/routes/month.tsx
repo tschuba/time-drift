@@ -1,12 +1,11 @@
 import Decimal from "decimal.js";
 import { Hono } from "hono";
-import { Layout, SaldoBadge } from "../components/layout.js";
+import { ErrorPage, Layout, SaldoBadge } from "../components/layout.js";
 import { getRange } from "../db/queries.js";
+import { dec, monthYear, t, weekday } from "../lib/i18n.js";
 import { dailySaldo, dayActualHours, defaultTargetHours, formatHours } from "../lib/time.js";
 
-const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-const WD = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const label = (y: number, m: number) => `${MONTHS[m - 1]} ${y}`;
+const label = monthYear;
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}`;
 
 export const monthRoutes = new Hono();
@@ -15,7 +14,7 @@ monthRoutes.get("/month/:ym?", async (c) => {
   const param = c.req.param("ym");
   const now = new Date();
   const match = param ? /^(\d{4})-(\d{2})$/.exec(param) : [null, String(now.getFullYear()), String(now.getMonth() + 1)];
-  if (!match || Number(match[2]) < 1 || Number(match[2]) > 12) return c.text("Invalid month", 400);
+  if (!match || Number(match[2]) < 1 || Number(match[2]) > 12) return c.html(<ErrorPage message={t("err.month")} />, 400);
   const year = Number(match[1]);
   const month = Number(match[2]);
   const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
@@ -32,7 +31,7 @@ monthRoutes.get("/month/:ym?", async (c) => {
     sumActual = sumActual.plus(actual ?? 0);
     sumTarget = sumTarget.plus(target);
     const blocks = (d?.blocks ?? []).map(
-      (b) => `${b.startTime.slice(0, 5)}–${b.endTime?.slice(0, 5) ?? "…"}${new Decimal(b.breakHours).gt(0) ? ` (${new Decimal(b.breakHours)}h brk)` : ""}`,
+      (b) => `${b.startTime.slice(0, 5)}–${b.endTime?.slice(0, 5) ?? "…"}${new Decimal(b.breakHours).gt(0) ? ` (${t("month.brk", { h: dec(new Decimal(b.breakHours).toString()) })})` : ""}`,
     );
     // Missing day: full target counts as deficit; running day: no saldo yet.
     const saldo = d ? dailySaldo(actual, target) : target.neg();
@@ -42,21 +41,21 @@ monthRoutes.get("/month/:ym?", async (c) => {
   const prev = month === 1 ? [year - 1, 12] as const : [year, month - 1] as const;
   const next = month === 12 ? [year + 1, 1] as const : [year, month + 1] as const;
   return c.html(
-    <Layout title={label(year, month)}>
+    <Layout title={label(year, month)} nav="/month">
       <div class="flex justify-between items-center mb-4">
-        <a class="btn btn-sm" href={`/month/${ym(...prev)}`}>← {label(...prev)}</a>
-        <h2 class="text-xl font-bold">{label(year, month)}</h2>
-        <a class="btn btn-sm" href={`/month/${ym(...next)}`}>{label(...next)} →</a>
+        <a class="btn btn-sm" href={`/month/${ym(...prev)}`}>← <span class="hidden sm:inline">{label(...prev)}</span></a>
+        <h1 class="text-xl font-bold">{label(year, month)}</h1>
+        <a class="btn btn-sm" href={`/month/${ym(...next)}`}><span class="hidden sm:inline">{label(...next)}</span> →</a>
       </div>
-      <table class="table table-sm">
+      <div class="overflow-x-auto"><table class="table table-xs sm:table-sm">
         <thead>
-          <tr><th>Date</th><th>Time Blocks</th><th class="text-right">Actual</th><th class="text-right">Target</th><th class="text-right">Saldo</th></tr>
+          <tr><th>{t("date")}</th><th class="hidden sm:table-cell">{t("month.blocks")}</th><th class="text-right">{t("actual")}</th><th class="text-right">{t("target")}</th><th class="text-right">{t("saldo")}</th></tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr class={r.wd === 0 || r.wd === 6 ? "opacity-60" : ""}>
-              <td><a class="link" href={`/day/${r.date}`}>{WD[r.wd]} {r.date.slice(8)}</a></td>
-              <td>{r.blocks.map((b) => <div>{b}</div>)}</td>
+              <td class="whitespace-nowrap"><a class="link" href={`/day/${r.date}`}>{weekday(r.wd, "short")} {r.date.slice(8)}</a>{r.blocks.map((b) => <div class="sm:hidden text-xs opacity-70">{b}</div>)}</td>
+              <td class="hidden sm:table-cell">{r.blocks.map((b) => <div>{b}</div>)}</td>
               <td class="text-right">{r.actual ? formatHours(r.actual) : "—"}</td>
               <td class="text-right">{formatHours(r.target)}</td>
               <td class="text-right"><SaldoBadge value={r.saldo} /></td>
@@ -65,13 +64,13 @@ monthRoutes.get("/month/:ym?", async (c) => {
         </tbody>
         <tfoot>
           <tr>
-            <td colspan={2}><strong>Total</strong></td>
+            <td><strong>{t("month.total")}</strong></td><td class="hidden sm:table-cell" />
             <td class="text-right">{formatHours(sumActual)}</td>
             <td class="text-right">{formatHours(sumTarget)}</td>
             <td class="text-right"><SaldoBadge value={sumActual.minus(sumTarget)} /></td>
           </tr>
         </tfoot>
-      </table>
+      </table></div>
     </Layout>,
   );
 });

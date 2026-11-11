@@ -1,9 +1,10 @@
+import { dateLong, dec, t } from "./i18n.js";
 // Minimal inline-SVG charts, rendered server-side as hono/jsx.
 export type Point = { label: string; value: number };
 const W = 720;
 const H = 240;
 const PAD = { l: 40, r: 10, t: 10, b: 24 };
-const empty = <p class="opacity-60 p-4">No data</p>;
+const empty = () => <p class="opacity-60 p-4">{t("noData")}</p>;
 
 function scale(min: number, max: number) {
   if (min === max) max = min + 1;
@@ -11,7 +12,7 @@ function scale(min: number, max: number) {
 }
 
 export function LineChart({ points }: { points: Point[] }) {
-  if (!points.length) return empty;
+  if (!points.length) return empty();
   const vals = points.map((p) => p.value);
   const y = scale(Math.min(0, ...vals), Math.max(0, ...vals));
   const x = (i: number) => PAD.l + (points.length === 1 ? 0.5 : i / (points.length - 1)) * (W - PAD.l - PAD.r);
@@ -30,7 +31,7 @@ export function LineChart({ points }: { points: Point[] }) {
 }
 
 export function BarChart({ bars }: { bars: { label: string; actual: number; target: number }[] }) {
-  if (!bars.length) return empty;
+  if (!bars.length) return empty();
   const max = Math.max(1, ...bars.flatMap((b) => [b.actual, b.target]));
   const y = scale(0, max);
   const slot = (W - PAD.l - PAD.r) / bars.length;
@@ -68,7 +69,7 @@ export function Heatmap({ year, days }: { year: number; days: Map<string, number
     const opacity = h === undefined ? 0.06 : h <= 0 ? 0.1 : Math.min(1, 0.25 + h / 12);
     cells.push(
       <rect x={col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity}>
-        <title>{iso}{h === undefined ? "" : `: ${h.toFixed(2)}h`}</title>
+        <title>{dateLong(iso)}{h === undefined ? "" : `: ${dec(h.toFixed(2))}h`}</title>
       </rect>,
     );
   }

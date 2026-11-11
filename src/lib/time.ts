@@ -1,3 +1,4 @@
+import { dec } from "./i18n.js";
 import Decimal from "decimal.js";
 
 // Match rust_decimal: 28 significant digits; format!("{:.2}") rounds half-to-even.
@@ -48,11 +49,11 @@ export function parseTimeInput(input: string): string | null {
   return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
 }
 
-export const formatHours = (h: Decimal.Value) => new Decimal(h).toFixed(2);
+export const formatHours = (h: Decimal.Value) => dec(new Decimal(h).toFixed(2));
 
 export function formatSaldo(s: Decimal.Value): string {
   const d = new Decimal(s);
-  if (d.gt(0)) return `+${d.toFixed(2)}`;
-  if (d.lt(0)) return d.toFixed(2);
-  return "±0.00";
+  if (d.gt(0)) return dec(`+${d.toFixed(2)}`);
+  if (d.lt(0)) return dec(d.toFixed(2));
+  return dec("±0.00");
 }
