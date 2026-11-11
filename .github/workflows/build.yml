@@ -7,7 +7,6 @@ on:
     branches: [main]
 
 env:
-  CARGO_TERM_COLOR: always
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
 
@@ -29,17 +28,18 @@ jobs:
           --health-timeout 5s
           --health-retries 5
     env:
-      DATABASE_URL: postgres://timedrift:testpassword@localhost:5432/timedrift_test
+      TEST_DATABASE_URL: postgres://timedrift:testpassword@localhost:5432/timedrift_test
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
         with:
-          components: clippy
-      - uses: Swatinem/rust-cache@v2
-      - name: Run clippy
-        run: cargo clippy -- -D warnings
-      - name: Run tests
-        run: cargo test --all
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm test
+      - run: pnpm build
 
   build-and-push:
     needs: test
