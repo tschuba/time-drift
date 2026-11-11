@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { ErrorPage, Layout, SaldoBadge } from "../components/layout.js";
 import { getRange } from "../db/queries.js";
 import { dec, monthYear, t, weekday } from "../lib/i18n.js";
-import { dailySaldo, dayActualHours, defaultTargetHours, formatHours } from "../lib/time.js";
+import {dailySaldo, dayActualHours, defaultTargetHours, formatHM } from "../lib/time.js";
 
 const label = monthYear;
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}`;
@@ -56,8 +56,8 @@ monthRoutes.get("/month/:ym?", async (c) => {
             <tr class={r.wd === 0 || r.wd === 6 ? "opacity-60" : ""}>
               <td class="whitespace-nowrap"><a class="link" href={`/day/${r.date}`}>{weekday(r.wd, "short")} {r.date.slice(8)}</a>{r.blocks.map((b) => <div class="sm:hidden text-xs opacity-70">{b}</div>)}</td>
               <td class="hidden sm:table-cell">{r.blocks.map((b) => <div>{b}</div>)}</td>
-              <td class="text-right">{r.actual ? formatHours(r.actual) : "—"}</td>
-              <td class="text-right">{formatHours(r.target)}</td>
+              <td class="text-right">{r.actual ? formatHM(r.actual) : "—"}</td>
+              <td class="text-right">{formatHM(r.target)}</td>
               <td class="text-right"><SaldoBadge value={r.saldo} /></td>
             </tr>
           ))}
@@ -65,8 +65,8 @@ monthRoutes.get("/month/:ym?", async (c) => {
         <tfoot>
           <tr>
             <td><strong>{t("month.total")}</strong></td><td class="hidden sm:table-cell" />
-            <td class="text-right">{formatHours(sumActual)}</td>
-            <td class="text-right">{formatHours(sumTarget)}</td>
+            <td class="text-right">{formatHM(sumActual)}</td>
+            <td class="text-right">{formatHM(sumTarget)}</td>
             <td class="text-right"><SaldoBadge value={sumActual.minus(sumTarget)} /></td>
           </tr>
         </tfoot>

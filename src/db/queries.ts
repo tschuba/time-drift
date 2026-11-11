@@ -29,6 +29,31 @@ export async function getRange(from: string, to: string): Promise<DayWithBlocks[
   return [...out.values()];
 }
 
+/** Upsert entry fields only; blocks are managed individually. */
+export async function saveEntry(date: string, targetHours: string, note: string | null) {
+  await db
+    .insert(timeEntries)
+    .values({ date, targetHours, note })
+    .onConflictDoUpdate({ target: timeEntries.date, set: { targetHours, note, updatedAt: new Date() } });
+}
+
+export type BlockRow = typeof timeBlocks.$inferSelect;
+
+/** Append a block; creates the day's entry with defaultTarget if it does not exist yet. */
+export async function addBlock(date: string, defaultTarget: string, b: BlockInput) {
+  await db.transaction(async (tx) => {
+    await tx.insert(timeEntries).values({ date, targetHours: defaultTarget }).onConflictDoNothing({ target: timeEntries.date });
+    const [entry] = await tx.select({ id: timeEntries.id }).from(timeEntries).where(eq(timeEntries.date, date));
+    const [{ next }] = await tx.select({ next: sql<number>`COALESCE(MAX(${timeBlocks.sortOrder}) + 1, 0)` }).from(timeBlocks).where(eq(timeBlocks.entryId, entry!.id));
+    await tx.insert(timeBlocks).values({ entryId: entry!.id, startTime: b.start, endTime: b.end, breakHours: b.breakHours, sortOrder: next! });
+  });
+}
+
+export const updateBlock = (id: string, b: BlockInput) =>
+  db.update(timeBlocks).set({ startTime: b.start, endTime: b.end, breakHours: b.breakHours, updatedAt: new Date() }).where(eq(timeBlocks.id, id));
+
+export const deleteBlock = (id: string) => db.delete(timeBlocks).where(eq(timeBlocks.id, id));
+
 /** Upsert entry and replace all its blocks atomically. */
 export async function saveDay(date: string, targetHours: string, note: string | null, blocks: BlockInput[]) {
   await db.transaction(async (tx) => {

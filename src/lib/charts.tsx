@@ -1,4 +1,5 @@
-import { dateLong, dec, t } from "./i18n.js";
+import { dateLong, t } from "./i18n.js";
+import { formatHM } from "./time.js";
 // Minimal inline-SVG charts, rendered server-side as hono/jsx.
 export type Point = { label: string; value: number };
 const W = 720;
@@ -69,7 +70,7 @@ export function Heatmap({ year, days }: { year: number; days: Map<string, number
     const opacity = h === undefined ? 0.06 : h <= 0 ? 0.1 : Math.min(1, 0.25 + h / 12);
     cells.push(
       <rect x={col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity}>
-        <title>{dateLong(iso)}{h === undefined ? "" : `: ${dec(h.toFixed(2))}h`}</title>
+        <title>{dateLong(iso)}{h === undefined ? "" : `: ${formatHM(h)}`}</title>
       </rect>,
     );
   }

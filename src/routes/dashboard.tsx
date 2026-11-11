@@ -3,8 +3,8 @@ import { Hono } from "hono";
 import { Layout, SaldoBadge } from "../components/layout.js";
 import { getDay, getRange, getTotalSaldo } from "../db/queries.js";
 import { dateLong, dateShort, t, weekday } from "../lib/i18n.js";
-import { dailySaldo, dayActualHours, defaultTargetHours, formatHours, formatSaldo } from "../lib/time.js";
-import { BlockRow, hhmm, num } from "./day.js";
+import {dailySaldo, dayActualHours, defaultTargetHours, formatHM } from "../lib/time.js";
+import { BlocksSection, Ico, Lbl } from "./day.js";
 
 // Local calendar date (server TZ), not UTC.
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -29,37 +29,30 @@ dashboardRoutes.get("/", async (c) => {
       <div class="stats bg-base-200 w-full mb-4">
         <div class="stat">
           <div class="stat-title">{t("dash.running")}</div>
-          <div class={`stat-value ${total.gt(0) ? "text-success" : total.lt(0) ? "text-error" : ""}`}>{formatSaldo(total)}h</div>
+          <div class={`stat-value ${total.gt(0) ? "text-success" : total.lt(0) ? "text-error" : ""}`}>{formatHM(total, true)}</div>
         </div>
       </div>
 
       <div class="card bg-base-200 p-4 mb-4">
         <div class="flex flex-wrap justify-between gap-2 mb-2">
           <h2 class="font-semibold">{t("dash.today")} — {weekday(now.getDay(), "long")}, {dateLong(today)}</h2>
-          <a class="btn btn-sm" href={`/day/${today}?from=dashboard`}>{t("dash.fullEditor")}</a>
+          <a class="btn btn-sm" href={`/day/${today}?from=dashboard`} aria-label={t("dash.fullEditor")} title={t("dash.fullEditor")}><Ico n="maximize" /><Lbl>{t("dash.fullEditor")}</Lbl></a>
         </div>
         <form method="post" action={`/day/${today}`}>
           <input type="hidden" name="return_to" value="/" />
-          <div class="flex gap-4 items-end mb-2">
-            <label class="flex flex-col gap-1">
-              <span class="text-sm opacity-70">{t("dash.targetH")}</span>
-              <input class="input input-bordered w-24" type="number" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
+          <div class="flex flex-wrap gap-3 items-center mb-3">
+            <label class="floating-label">
+              <span>{t("dash.targetH")}</span>
+              <input class="input input-sm sm:input-md w-28" placeholder={t("dash.targetH")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
             </label>
+            <button class="btn btn-primary btn-sm" aria-label={t("save")} title={t("save")}><Ico n="save" /><Lbl>{t("save")}</Lbl></button>
             {actual && (
-              <div>{t("dash.actualColon")} <strong>{formatHours(actual)}h</strong> <SaldoBadge value={dailySaldo(actual, target)} /></div>
+              <div>{t("dash.actualColon")} <strong>{formatHM(actual)}</strong> <SaldoBadge value={dailySaldo(actual, target)} /></div>
             )}
           </div>
-          <div id="blocks-container">
-            {(blocks.length ? blocks : [null]).map((b) => (
-              <BlockRow start={hhmm(b?.startTime ?? null)} end={hhmm(b?.endTime ?? null)} brk={b ? num(b.breakHours) : ""} />
-            ))}
-          </div>
           <input type="hidden" name="note" value={todayDay?.entry.note ?? ""} />
-          <div class="flex gap-2 mt-2">
-            <button type="button" class="btn btn-sm" hx-get={`/day/${today}/add-block`} hx-target="#blocks-container" hx-swap="beforeend">{t("dash.addBlock")}</button>
-            <button class="btn btn-primary btn-sm">{t("save")}</button>
-          </div>
         </form>
+        <div class="mt-4"><BlocksSection date={today} blocks={blocks} /></div>
       </div>
 
       <div class="card bg-base-200 p-4">
@@ -75,8 +68,8 @@ dashboardRoutes.get("/", async (c) => {
               return (
                 <tr class={wd === 0 || wd === 6 ? "opacity-60" : ""}>
                   <td class="whitespace-nowrap"><a class="link" href={`/day/${date}`}>{weekday(wd, "short")} {dateShort(date)}</a></td>
-                  <td class="text-right">{a ? formatHours(a) : "—"}</td>
-                  <td class="text-right">{formatHours(t)}</td>
+                  <td class="text-right">{a ? formatHM(a) : "—"}</td>
+                  <td class="text-right">{formatHM(t)}</td>
                   <td class="text-right"><SaldoBadge value={d ? dailySaldo(a, t) : t.neg()} /></td>
                 </tr>
               );

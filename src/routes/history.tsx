@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { Layout, SaldoBadge } from "../components/layout.js";
 import { getPage, getTotalSaldo } from "../db/queries.js";
 import { dateShort, t, weekday } from "../lib/i18n.js";
-import { dailySaldo, dayActualHours, formatHours } from "../lib/time.js";
+import {dailySaldo, dayActualHours, formatHM } from "../lib/time.js";
 
 const PAGE_SIZE = 50;
 const validDate = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? s : undefined);
@@ -23,8 +23,8 @@ historyRoutes.get("/history", async (c) => {
     <Layout title={t("hist.title")} nav="/history">
       <h1 class="text-2xl font-bold mb-4">{t("hist.title")}</h1>
       <form method="get" action="/history" class="flex flex-wrap gap-2 items-end mb-4">
-        <label class="flex flex-col gap-1"><span class="text-sm opacity-70">{t("hist.from")}</span><input class="input input-bordered" type="date" name="from" value={from ?? ""} /></label>
-        <label class="flex flex-col gap-1"><span class="text-sm opacity-70">{t("hist.to")}</span><input class="input input-bordered" type="date" name="to" value={to ?? ""} /></label>
+        <label class="floating-label"><span>{t("hist.from")}</span><input class="input input-sm sm:input-md" type="date" name="from" placeholder={t("hist.from")} value={from ?? ""} /></label>
+        <label class="floating-label"><span>{t("hist.to")}</span><input class="input input-sm sm:input-md" type="date" name="to" placeholder={t("hist.to")} value={to ?? ""} /></label>
         <button class="btn btn-primary btn-sm">{t("hist.filter")}</button>
         {(from || to) && <a href="/history" class="btn btn-sm">{t("hist.clear")}</a>}
       </form>
@@ -45,8 +45,8 @@ historyRoutes.get("/history", async (c) => {
             return (
               <tr class={wd === 0 || wd === 6 ? "opacity-60" : ""}>
                 <td class="whitespace-nowrap"><a class="link" href={`/day/${d.entry.date}`}>{weekday(wd, "short")} {dateShort(d.entry.date)}</a></td>
-                <td class="text-right">{actual ? formatHours(actual) : "—"}</td>
-                <td class="text-right">{formatHours(target)}</td>
+                <td class="text-right">{actual ? formatHM(actual) : "—"}</td>
+                <td class="text-right">{formatHM(target)}</td>
                 <td class="text-right"><SaldoBadge value={dailySaldo(actual, target)} /></td>
                 <td class="text-right"><SaldoBadge value={running[i]!} /></td>
                 <td class="opacity-70">{d.entry.note}</td>
