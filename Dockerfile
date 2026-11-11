@@ -10,5 +10,6 @@ ENV NODE_ENV=production PORT=80
 COPY --from=build /app/node_modules node_modules
 COPY --from=build /app/dist dist
 COPY --from=build /app/public public
+COPY --from=build /app/drizzle drizzle
 EXPOSE 80
 CMD ["node", "dist/index.js"]
