@@ -21,9 +21,11 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
       <script src={HTMX} defer />
     </head>
     <body>
-      <nav class="navbar bg-base-200 px-4 flex-wrap sm:flex-nowrap gap-x-2 gap-y-0" aria-label={t("nav.label")}>
+      <nav class="navbar relative bg-base-200 px-4 flex-wrap sm:flex-nowrap gap-x-2 gap-y-0" aria-label={t("nav.label")}>
         <a href="/" class="font-bold text-lg flex-1 whitespace-nowrap">Time Drift</a>
-        <ul class="menu menu-horizontal menu-sm sm:menu-md gap-0 sm:gap-1 w-full sm:w-auto -mx-2 sm:mx-0 order-3 sm:order-2">
+        <button type="button" class="btn btn-ghost btn-xs sm:hidden order-2 text-base leading-none" aria-label={t("nav.label")} aria-controls="nav-links" aria-expanded="false"
+          onclick="var u=document.getElementById('nav-links');this.setAttribute('aria-expanded',u.classList.toggle('hidden')?'false':'true')"><svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+        <ul id="nav-links" class="hidden sm:flex menu menu-vertical sm:menu-horizontal menu-lg sm:menu-md gap-0 sm:gap-1 absolute sm:static top-full inset-x-0 w-full z-10 bg-base-200 shadow-lg sm:shadow-none sm:w-auto sm:bg-transparent order-3 sm:order-2">
           {[["/", t("nav.dashboard")], ["/month", t("nav.month")], ["/analytics", t("nav.analytics")], ["/history", t("nav.history")]].map(([href, text]) => (
             <li><a href={href} class={nav === href ? "menu-active" : ""} aria-current={nav === href ? "page" : undefined}>{text}</a></li>
           ))}
