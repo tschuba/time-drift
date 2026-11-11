@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { Layout } from "../components/layout.js";
 import { getRange } from "../db/queries.js";
 import { BarChart, Heatmap, LineChart } from "../lib/charts.js";
-import { dec, t, weekday } from "../lib/i18n.js";
+import { dateLong, dec, t, weekday } from "../lib/i18n.js";
 import { blockActualHours, formatHM } from "../lib/time.js";
 
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -74,7 +74,7 @@ analyticsRoutes.get("/analytics", async (c) => {
             ))}
           </div>
         </div>
-        <LineChart points={trend} />
+        <LineChart points={trend.map((p) => ({ ...p, label: dateLong(p.label) }))} />
       </div>
       <div class="card bg-base-200 p-4 mb-4">
         <h2 class="font-semibold mb-2">{t("an.monthly")}</h2>
@@ -88,10 +88,9 @@ analyticsRoutes.get("/analytics", async (c) => {
             <a class="btn btn-sm" href={`/analytics?range=${range}&heatmap_year=${heatYear + 1}`}>{heatYear + 1} →</a>
           </div>
         </div>
-        <div class="overflow-x-auto"><div class="min-w-[640px]"><Heatmap year={heatYear} days={heat} /></div></div>
-        <div id="heat-info" class="text-sm mt-2 min-h-5" role="status" aria-live="polite">{t("an.heatHint")}</div>
-        {/* Tap/click a cell: show its <title> text below; static script, text via textContent. */}
-        <script dangerouslySetInnerHTML={{ __html: `(function(){var i=document.getElementById("heat-info"),sel;document.querySelectorAll("svg rect").forEach(function(r){var t=r.querySelector("title");if(!t)return;r.addEventListener("click",function(){if(sel)sel.removeAttribute("stroke");sel=r;r.setAttribute("stroke","currentColor");i.textContent=t.textContent})})})()` }} />
+        <div id="heat" class="relative"><div class="overflow-x-auto"><div class="min-w-[640px]"><Heatmap year={heatYear} days={heat} /></div></div><div id="heat-tip" class="tooltip tooltip-open absolute pointer-events-none hidden" /></div>
+        {/* Hover shows the tooltip, click pins it (click again/outside/Esc unpins); static script, text via data-tip. */}
+        <script dangerouslySetInnerHTML={{ __html: `(function(){var h=document.getElementById("heat"),p=document.getElementById("heat-tip"),pin;function hide(){p.classList.add("hidden")}function show(r){var a=r.getBoundingClientRect(),b=h.getBoundingClientRect();p.style.left=a.left-b.left+"px";p.style.top=a.top-b.top+"px";p.style.width=a.width+"px";p.style.height=a.height+"px";p.setAttribute("data-tip",r.querySelector("title").textContent);p.classList.remove("hidden")}function mark(r){if(pin)pin.removeAttribute("stroke");pin=r;if(r)r.setAttribute("stroke","currentColor")}function unpin(){mark(null);hide()}h.querySelectorAll("rect").forEach(function(r){if(!r.querySelector("title"))return;r.addEventListener("click",function(e){e.stopPropagation();if(pin===r)return unpin();mark(r);show(r)});r.addEventListener("pointerenter",function(e){if(e.pointerType==="mouse")show(r)});r.addEventListener("pointerleave",function(){pin?show(pin):hide()})});document.addEventListener("click",unpin);document.addEventListener("keydown",function(e){if(e.key==="Escape")unpin()})})()` }} />
       </div>
     </Layout>,
   );
