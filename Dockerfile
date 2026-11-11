@@ -1,15 +1,14 @@
-# Stage 1: Build
-FROM rust:bookworm AS builder
+FROM node:24-slim AS build
+RUN corepack enable
 WORKDIR /app
 COPY . .
-RUN cargo build --release
+RUN pnpm install --frozen-lockfile && pnpm build && pnpm prune --prod
 
-# Stage 2: Runtime
-FROM debian:bookworm-slim
-RUN apt-get update && apt-get install -y ca-certificates && rm -rf /var/lib/apt/lists/*
-COPY --from=builder /app/target/release/time-drift /usr/local/bin/
-COPY --from=builder /app/static /app/static
-COPY --from=builder /app/migrations /app/migrations
+FROM node:24-slim
 WORKDIR /app
+ENV NODE_ENV=production PORT=80
+COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/dist dist
+COPY --from=build /app/public public
 EXPOSE 80
-CMD ["time-drift"]
+CMD ["node", "dist/index.js"]
