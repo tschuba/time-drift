@@ -11,3 +11,4 @@ tools/
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/
 node_modules
+public/css/
