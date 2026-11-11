@@ -6,13 +6,13 @@ import { dailySaldo, dayActualHours, defaultTargetHours, formatHours, parseTimeI
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
-const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
-const num = (s: string) => (Number(s) === 0 ? "" : new Decimal(s).toString());
+export const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
+export const num = (s: string) => (Number(s) === 0 ? "" : new Decimal(s).toString());
 /** Only same-site paths, to avoid open redirects. */
 const safeReturn = (r: unknown, fallback: string) => (typeof r === "string" && /^\/(?!\/)/.test(r) ? r : fallback);
 const many = (v: unknown): string[] => (Array.isArray(v) ? v : v === undefined ? [] : [v]).map(String);
 
-const BlockRow = ({ start = "", end = "", brk = "" }) => (
+export const BlockRow = ({ start = "", end = "", brk = "" }) => (
   <div class="block-row flex gap-2 items-end mb-2">
     <label class="form-control">
       <span class="label-text">Start</span>
