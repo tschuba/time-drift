@@ -62,6 +62,6 @@ export const SaldoBadge = ({ value }: { value: Decimal | null }) => (
 export const ErrorPage = ({ message, back = "/" }: { message: string; back?: string }) => (
   <Layout title={t("err.title")}>
     <div class="alert alert-error" role="alert"><span>{message}</span></div>
-    <a class="btn btn-sm mt-4" href={back}>{t("back")}</a>
+    <a class="btn btn-sm sm:btn-md mt-4" href={back}>{t("back")}</a>
   </Layout>
 );

@@ -70,7 +70,7 @@ analyticsRoutes.get("/analytics", async (c) => {
           <h2 class="font-semibold">{t("an.trend")}</h2>
           <div class="join">
             {(["3m", "6m", "1y", "all"] as const).map((r) => (
-              <a class={`btn btn-sm join-item ${r === range ? "btn-primary" : ""}`} href={`/analytics?range=${r}`}>{r === "all" ? t("an.all") : r.toUpperCase()}</a>
+              <a class={`btn btn-sm sm:btn-md join-item ${r === range ? "btn-primary" : ""}`} href={`/analytics?range=${r}`}>{r === "all" ? t("an.all") : r.toUpperCase()}</a>
             ))}
           </div>
         </div>
@@ -84,8 +84,8 @@ analyticsRoutes.get("/analytics", async (c) => {
         <div class="flex flex-wrap justify-between gap-2 mb-2">
           <h2 class="font-semibold">{t("an.intensity")} — {heatYear}</h2>
           <div class="flex gap-2">
-            <a class="btn btn-sm" href={`/analytics?range=${range}&heatmap_year=${heatYear - 1}`}>← {heatYear - 1}</a>
-            <a class="btn btn-sm" href={`/analytics?range=${range}&heatmap_year=${heatYear + 1}`}>{heatYear + 1} →</a>
+            <a class="btn btn-sm sm:btn-md" href={`/analytics?range=${range}&heatmap_year=${heatYear - 1}`}>← {heatYear - 1}</a>
+            <a class="btn btn-sm sm:btn-md" href={`/analytics?range=${range}&heatmap_year=${heatYear + 1}`}>{heatYear + 1} →</a>
           </div>
         </div>
         <div id="heat" class="relative"><div class="overflow-x-auto"><div class="min-w-[640px]"><Heatmap year={heatYear} days={heat} /></div></div><div id="heat-tip" class="tooltip tooltip-open absolute pointer-events-none hidden" /></div>
