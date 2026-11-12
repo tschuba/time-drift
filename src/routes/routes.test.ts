@@ -127,12 +127,12 @@ describe("month", () => {
     expect((await app.request("/month/x")).status).toBe(400);
   });
 
-  it("totals the month: missing workdays count as deficit", async () => {
-    // Feb 2026: 20 workdays x 8h = 160 target, one 9h day logged.
+  it("totals the month: missing days are ignored", async () => {
+    // Only the logged day (8h target, 9h actual) counts.
     vi.mocked(q.getRange).mockResolvedValue([day("2026-02-02", "08:00:00", "17:30:00")]);
     const html = await (await app.request("/month/2026-02")).text();
-    expect(html).toContain("160:00");
-    expect(html).toContain("-151:00");
+    expect(html).toContain("08:00");
+    expect(html).toContain("+01:00");
     expect(html).toContain("March 2026");
   });
 

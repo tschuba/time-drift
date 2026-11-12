@@ -85,7 +85,7 @@ dashboardRoutes.get("/", async (c) => {
                   <td class="whitespace-nowrap"><a class="link" href={`/day/${date}`}>{weekday(wd, "short")} {dateShort(date)}</a></td>
                   <td class="text-right">{a ? formatHM(a) : "—"}</td>
                   <td class="text-right">{formatHM(t)}</td>
-                  <td class="text-right"><SaldoBadge value={d ? dailySaldo(a, t) : t.neg()} /></td>
+                  <td class="text-right">{d && dailySaldo(a, t) && <SaldoBadge value={dailySaldo(a, t)} />}</td>
                 </tr>
               );
             })}
