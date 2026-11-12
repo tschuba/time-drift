@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.4.0...time-drift-v0.5.0) (2026-11-12)
+
+
+### Features
+
+* add quick-fill buttons and actual/saldo stats to day view ([#17](https://github.com/tschuba/time-drift/issues/17)) ([59d1cbc](https://github.com/tschuba/time-drift/commit/59d1cbcd3458c1692612696cf2b0e58aef1ca57e))
+* analytics year filter, chart hover labels and month ticks ([#19](https://github.com/tschuba/time-drift/issues/19)) ([5fb1975](https://github.com/tschuba/time-drift/commit/5fb1975646a03e285e75b6a35e14ec1fb1269a25))
+
 ## [0.4.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.3.0...time-drift-v0.4.0) (2026-11-12)
 
 
