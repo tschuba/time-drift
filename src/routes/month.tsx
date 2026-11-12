@@ -3,7 +3,7 @@ import { Hono } from "hono";
 import { ErrorPage, Layout, SaldoBadge } from "../components/layout.js";
 import { getRange } from "../db/queries.js";
 import { dec, monthYear, t, weekday } from "../lib/i18n.js";
-import {dailySaldo, dayActualHours, defaultTargetHours, formatHM } from "../lib/time.js";
+import {dailySaldo, dayActualHours, formatHM } from "../lib/time.js";
 
 const label = monthYear;
 const ym = (y: number, m: number) => `${y}-${String(m).padStart(2, "0")}`;
@@ -26,15 +26,15 @@ monthRoutes.get("/month/:ym?", async (c) => {
     const date = `${ym(year, month)}-${String(i + 1).padStart(2, "0")}`;
     const wd = new Date(`${date}T00:00:00Z`).getUTCDay();
     const d = entries.get(date);
-    const target = d ? new Decimal(d.entry.targetHours) : defaultTargetHours(date);
+    const target = new Decimal(d?.entry.targetHours ?? 0);
     const actual = d ? dayActualHours(d.blocks.map((b) => ({ start: b.startTime, end: b.endTime, breakHours: b.breakHours }))) : null;
     sumActual = sumActual.plus(actual ?? 0);
     sumTarget = sumTarget.plus(target);
     const blocks = (d?.blocks ?? []).map(
       (b) => `${b.startTime.slice(0, 5)}–${b.endTime?.slice(0, 5) ?? "…"}${new Decimal(b.breakHours).gt(0) ? ` (${t("month.brk", { h: dec(new Decimal(b.breakHours).toString()) })})` : ""}`,
     );
-    // Missing day: full target counts as deficit; running day: no saldo yet.
-    const saldo = d ? dailySaldo(actual, target) : target.neg();
+    // Missing day: no target, no saldo (matches getTotalSaldo); running day: no saldo yet.
+    const saldo = d ? dailySaldo(actual, target) : null;
     return { date, wd, blocks, actual, target, saldo };
   });
 
@@ -58,7 +58,7 @@ monthRoutes.get("/month/:ym?", async (c) => {
               <td class="hidden sm:table-cell">{r.blocks.map((b) => <div>{b}</div>)}</td>
               <td class="text-right">{r.actual ? formatHM(r.actual) : "—"}</td>
               <td class="text-right">{formatHM(r.target)}</td>
-              <td class="text-right"><SaldoBadge value={r.saldo} /></td>
+              <td class="text-right">{r.saldo && <SaldoBadge value={r.saldo} />}</td>
             </tr>
           ))}
         </tbody>
