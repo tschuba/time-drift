@@ -51,6 +51,18 @@ docker run -d --rm -p 5544:5432 -e POSTGRES_USER=timedrift -e POSTGRES_PASSWORD=
 TEST_DATABASE_URL=postgres://timedrift:x@localhost:5544/timedrift pnpm test
 ```
 
+## Import from Excel
+
+`tools/import_excel.py` converts the SAP "Zeitkonto" export (sheet `Zeitkonto`, data from row 3, ending with a `SUM` row) into SQL. Multi-session days are merged into one entry with several blocks.
+
+```bash
+pip install openpyxl
+python3 tools/import_excel.py /path/to/zeiten.xlsx > import.sql
+psql $DATABASE_URL < import.sql
+```
+
+Notes: the script is not idempotent (running it twice duplicates or fails), so import into an empty database only. Dates listed in `SKIP_DATES` inside the script are excluded.
+
 ## Configuration
 
 | Variable | Default | |
