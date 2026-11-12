@@ -82,3 +82,17 @@ CI (`.github/workflows/build.yml`) typechecks, tests and builds on every PR; pus
 - Days with only a still-running block are excluded from the saldo.
 - Default target: 8h Mon–Fri, 0h on weekends.
 - Commits follow Conventional Commits (enforced by `.githooks`); direct commits to `main` are blocked.
+
+## Versioning
+
+[Semantic Versioning](https://semver.org). Conventional Commits drive the bump: `fix` → patch, `feat` → minor, `!`/`BREAKING CHANGE` → major (while `0.x`, breaking changes bump minor).
+Releases are automated by release-please (`.github/workflows/release.yml`): it keeps a "Release PR" open on `main` (bumps `package.json`, updates `CHANGELOG.md`). Merging it creates tag `vX.Y.Z`, which publishes GHCR images `X.Y.Z`, `X.Y`, `X` (`latest` follows `main`).
+
+### GitHub setup
+
+Required once for the release automation:
+
+1. **Settings → Actions → General → Workflow permissions:** enable "Allow GitHub Actions to create and approve pull requests" (release-please opens the Release PR).
+2. **Secret `RELEASE_TOKEN`** (Settings → Secrets and variables → Actions): a personal access token with `contents: write` and `pull requests: write` on this repo (fine-grained PAT). Without it the workflow falls back to `GITHUB_TOKEN`; the tag is then created but does **not** trigger the image build in `build.yml`.
+3. **Packages:** the GHCR image is pushed with `GITHUB_TOKEN` (`packages: write`); on first push, make sure the package is linked to the repo and has the desired visibility.
+4. **Branch protection on `main`** (recommended): require PRs and the `test` check; allow merging the Release PR. Local hooks (`.githooks`) also forbid direct commits to `main` and enforce Conventional Commits, so use squash-merge with a Conventional Commit PR title.
