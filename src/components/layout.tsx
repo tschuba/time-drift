@@ -1,5 +1,5 @@
 import type { Child } from "hono/jsx";
-import { statSync } from "node:fs";
+import { readFileSync, statSync } from "node:fs";
 import Decimal from "decimal.js";
 import { currentPath, lang, t } from "../lib/i18n.js";
 import { formatHM } from "../lib/time.js";
@@ -8,6 +8,9 @@ import { formatHM } from "../lib/time.js";
 const ver = (f: string) => { try { return Math.floor(statSync(`public/${f}`).mtimeMs).toString(36); } catch { return "0"; } };
 const CSS = `/static/css/app.css?v=${ver("css/app.css")}`;
 const HTMX = `/static/js/htmx.min.js?v=${ver("js/htmx.min.js")}`;
+
+// Read from package.json at startup (cwd-relative, like public/ above); release-please keeps it current.
+const VERSION: string = (() => { try { return JSON.parse(readFileSync("package.json", "utf8")).version; } catch { return "dev"; } })();
 
 export const Layout = ({ title, nav, children }: { title: string; nav?: string; children?: Child }) => (
   <html lang={lang()}>
@@ -39,6 +42,10 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
         </div>
       </nav>
       <main class="max-w-4xl mx-auto p-4">{children}</main>
+      <footer class="text-center text-xs opacity-60 p-4">
+        © {new Date().getFullYear()} <a class="link" target="_blank" rel="noopener noreferrer" href="https://github.com/tschuba">tschuba</a> · <a class="link" target="_blank" rel="noopener noreferrer" href="https://github.com/tschuba/time-drift/blob/main/LICENSE">AGPL-3.0</a> ·{" "}
+        <a class="link" target="_blank" rel="noopener noreferrer" href={`https://github.com/tschuba/time-drift/releases/tag/v${VERSION}`}>v{VERSION}</a>
+      </footer>
       <div id="flash" class="toast toast-end" role="status" />
       {/* One-shot flash message set by POST handlers; static string, no user input. */}
       <script dangerouslySetInnerHTML={{ __html: `(function(){var m=document.cookie.match(/(?:^|; )flash=([^;]+)/);if(!m)return;document.cookie="flash=; path=/; max-age=0";var f=document.getElementById("flash");f.innerHTML='<div class="alert alert-success"><span></span></div>';f.firstChild.firstChild.textContent=decodeURIComponent(m[1]);setTimeout(function(){f.remove()},3000)})()` }} />

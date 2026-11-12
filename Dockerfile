@@ -8,6 +8,7 @@ FROM node:24-slim
 WORKDIR /app
 ENV NODE_ENV=production PORT=80
 COPY --from=build /app/node_modules node_modules
+COPY --from=build /app/package.json package.json
 COPY --from=build /app/dist dist
 COPY --from=build /app/public public
 COPY --from=build /app/drizzle drizzle
