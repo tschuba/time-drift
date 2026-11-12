@@ -103,3 +103,5 @@ export const dateShort = (iso: string) => fmt({ day: "numeric", month: "numeric"
 /** wd: 0 = Sunday. */
 export const weekday = (wd: number, width: "short" | "long") => fmt({ weekday: width }, new Date(Date.UTC(2023, 0, 1 + wd)));
 export const monthYear = (y: number, m: number) => fmt({ month: "long", year: "numeric" }, new Date(Date.UTC(y, m - 1, 1)));
+/** ym = YYYY-MM → "Nov 26" / "Nov. 26". */
+export const monthShort = (ym: string) => fmt({ month: "short", year: "2-digit" }, new Date(`${ym}-01T00:00:00Z`));
