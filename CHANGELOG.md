@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.4.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.3.0...time-drift-v0.4.0) (2026-11-12)
+
+
+### Features
+
+* add app healthcheck to docker-compose ([#14](https://github.com/tschuba/time-drift/issues/14)) ([5b81d20](https://github.com/tschuba/time-drift/commit/5b81d20e4dd8f35d56a79700959708dbe03ec759))
+* add calendar grid to month view ([#16](https://github.com/tschuba/time-drift/issues/16)) ([9b02628](https://github.com/tschuba/time-drift/commit/9b02628c4b92081f497fde0734a6af96ba851fd9))
+
 ## [0.3.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.2.0...time-drift-v0.3.0) (2026-11-12)
 
 
