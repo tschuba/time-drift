@@ -1,10 +1,12 @@
 {
   "name": "time-drift",
   "license": "AGPL-3.0-only",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "type": "module",
   "packageManager": "pnpm@12.5.1",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "stack:up": "docker compose -f docker-compose.dev.yml up -d --wait",
     "stack:down": "docker compose -f docker-compose.dev.yml down",
