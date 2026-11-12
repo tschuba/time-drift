@@ -50,9 +50,9 @@ monthRoutes.get("/month/:ym?", async (c) => {
   return c.html(
     <Layout title={label(year, month)} nav="/month">
       <div class="flex justify-between items-center mb-4">
-        <a class="btn btn-sm" href={`/month/${ym(...prev)}`}>← <span class="hidden sm:inline">{label(...prev)}</span></a>
+        <a class="btn btn-sm sm:btn-md" href={`/month/${ym(...prev)}`}>← <span class="hidden sm:inline">{label(...prev)}</span></a>
         <h1 class="text-xl font-bold">{label(year, month)}</h1>
-        <a class="btn btn-sm" href={`/month/${ym(...next)}`}><span class="hidden sm:inline">{label(...next)}</span> →</a>
+        <a class="btn btn-sm sm:btn-md" href={`/month/${ym(...next)}`}><span class="hidden sm:inline">{label(...next)}</span> →</a>
       </div>
       <div class="grid grid-cols-7 gap-1 mb-2 text-center text-sm">
         {[1, 2, 3, 4, 5, 6, 0].map((w) => <div class="text-xs opacity-60">{weekday(w, "short")}</div>)}

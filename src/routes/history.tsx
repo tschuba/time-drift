@@ -25,8 +25,8 @@ historyRoutes.get("/history", async (c) => {
       <form method="get" action="/history" class="flex flex-wrap gap-2 items-end mb-4">
         <label class="floating-label"><span>{t("hist.from")}</span><input class="input input-sm sm:input-md" type="date" name="from" placeholder={t("hist.from")} value={from ?? ""} /></label>
         <label class="floating-label"><span>{t("hist.to")}</span><input class="input input-sm sm:input-md" type="date" name="to" placeholder={t("hist.to")} value={to ?? ""} /></label>
-        <button class="btn btn-primary btn-sm">{t("hist.filter")}</button>
-        {(from || to) && <a href="/history" class="btn btn-sm">{t("hist.clear")}</a>}
+        <button class="btn btn-primary btn-sm sm:btn-md">{t("hist.filter")}</button>
+        {(from || to) && <a href="/history" class="btn btn-sm sm:btn-md">{t("hist.clear")}</a>}
       </form>
       {days.length === 0 ? (
         <div class="alert" role="status">
@@ -58,9 +58,9 @@ historyRoutes.get("/history", async (c) => {
       )}
       {totalPages > 1 && (
         <div class="join flex justify-center my-4">
-          <a class={`join-item btn btn-sm ${page > 1 ? "" : "btn-disabled"}`} href={qs(page - 1)}>{t("hist.prev")}</a>
-          <span class="join-item btn btn-sm no-animation pointer-events-none">{t("hist.page", { p: page, n: totalPages })}</span>
-          <a class={`join-item btn btn-sm ${page < totalPages ? "" : "btn-disabled"}`} href={qs(page + 1)}>{t("hist.next")}</a>
+          <a class={`join-item btn btn-sm sm:btn-md ${page > 1 ? "" : "btn-disabled"}`} href={qs(page - 1)}>{t("hist.prev")}</a>
+          <span class="join-item btn btn-sm sm:btn-md no-animation pointer-events-none">{t("hist.page", { p: page, n: totalPages })}</span>
+          <a class={`join-item btn btn-sm sm:btn-md ${page < totalPages ? "" : "btn-disabled"}`} href={qs(page + 1)}>{t("hist.next")}</a>
         </div>
       )}
       <div class="text-center text-sm opacity-70">{t("hist.total", { n: total })}</div>

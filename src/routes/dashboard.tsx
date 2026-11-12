@@ -22,7 +22,6 @@ dashboardRoutes.get("/", async (c) => {
 
   const target = todayDay ? new Decimal(todayDay.entry.targetHours) : defaultTargetHours(today);
   const blocks = todayDay?.blocks ?? [];
-  const actual = todayDay ? dayActualHours(toBlocks(todayDay)) : null;
 
   // Running blocks count up to now, so the stat is live.
   const nowT = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
@@ -39,6 +38,10 @@ dashboardRoutes.get("/", async (c) => {
           <div class={`stat-value ${total.gt(0) ? "text-success" : total.lt(0) ? "text-error" : ""}`}>{formatHM(total, true)}</div>
         </div>
         <div class="stat">
+          <div class="stat-title">{t("actual")}</div>
+          <div class="stat-value">{formatHM(todayActual ?? new Decimal(0))}</div>
+        </div>
+        <div class="stat">
           <div class="stat-title">{t("dash.todaySaldo")}</div>
           <div class={`stat-value ${cls(todaySaldo)}`}>{formatHM(todaySaldo, true)}</div>
         </div>
@@ -51,7 +54,7 @@ dashboardRoutes.get("/", async (c) => {
       <div class="card bg-base-200 p-4 mb-4">
         <div class="flex flex-wrap justify-between gap-2 mb-2">
           <h2 class="font-semibold">{t("dash.today")} — {weekday(now.getDay(), "long")}, {dateLong(today)}</h2>
-          <a class="btn btn-sm" href={`/day/${today}?from=dashboard`} aria-label={t("dash.fullEditor")} title={t("dash.fullEditor")}><Ico n="maximize" /><Lbl>{t("dash.fullEditor")}</Lbl></a>
+          <a class="btn btn-sm sm:btn-md" href={`/day/${today}?from=dashboard`} aria-label={t("dash.fullEditor")} title={t("dash.fullEditor")}><Ico n="maximize" /><Lbl>{t("dash.fullEditor")}</Lbl></a>
         </div>
         <form method="post" action={`/day/${today}`}>
           <input type="hidden" name="return_to" value="/" />
@@ -60,10 +63,7 @@ dashboardRoutes.get("/", async (c) => {
               <span>{t("dash.targetH")}</span>
               <input class="input input-sm sm:input-md w-28" placeholder={t("dash.targetH")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
             </label>
-            <button class="btn btn-primary btn-sm" aria-label={t("save")} title={t("save")}><Ico n="save" /><Lbl>{t("save")}</Lbl></button>
-            {actual && (
-              <div>{t("dash.actualColon")} <strong>{formatHM(actual)}</strong> <SaldoBadge value={dailySaldo(actual, target)} /></div>
-            )}
+            <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("save")} title={t("save")}><Ico n="save" /><Lbl>{t("save")}</Lbl></button>
           </div>
           <input type="hidden" name="note" value={todayDay?.entry.note ?? ""} />
         </form>

@@ -2,7 +2,7 @@ import Decimal from "decimal.js";
 import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { raw } from "hono/html";
-import { ErrorPage, Layout, SaldoBadge } from "../components/layout.js";
+import { ErrorPage, Layout } from "../components/layout.js";
 import { addBlock, deleteBlock, deleteDay, getDay, saveEntry, updateBlock, type BlockInput, type BlockRow } from "../db/queries.js";
 import { dateLong, t, weekday as weekdayName } from "../lib/i18n.js";
 import {dailySaldo, dayActualHours, defaultTargetHours, formatHM, parseTimeInput } from "../lib/time.js";
@@ -86,19 +86,28 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
     <div class="flex flex-wrap items-end gap-2">
       <label class="floating-label flex-1 min-w-24">
         <span>{t("start")}</span>
-        <input class="input input-sm sm:input-md w-full" placeholder={t("start")} type="time" name="start" value={start} required />
+        <div class="input input-sm sm:input-md w-full relative">
+          <input class="grow min-w-0 pr-12" placeholder={t("start")} type="time" name="start" value={start} required />
+          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.start.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
+        </div>
       </label>
       <label class="floating-label flex-1 min-w-24">
         <span>{t("end")}</span>
-        <input class="input input-sm sm:input-md w-full" placeholder={t("end")} type="time" name="end" value={end} />
+        <div class="input input-sm sm:input-md w-full relative">
+          <input class="grow min-w-0 pr-12" placeholder={t("end")} type="time" name="end" value={end} />
+          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
+        </div>
       </label>
       <label class="floating-label flex-1 min-w-24">
         <span>{t("breakH")}</span>
-        <input class="input input-sm sm:input-md w-full" type="number" inputmode="decimal" name="brk" value={brk} placeholder={t("breakH")} step="0.25" min="0" max="24" />
+        <div class="input input-sm sm:input-md w-full pr-1 gap-1">
+          <input class="grow min-w-0" type="number" inputmode="decimal" name="brk" value={brk} placeholder={t("breakH")} step="0.25" min="0" max="24" />
+          {[["0.5", "30m"], ["1", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}'`}>{l}</button>)}
+        </div>
       </label>
-      {id && <button type="button" class="btn btn-ghost btn-sm text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
-      {id && <button type="button" class="btn btn-ghost btn-sm" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" /><Lbl>{t("cancel")}</Lbl></button>}
-      {id ? <button class="btn btn-primary btn-sm" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" /><Lbl>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-sm" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" /><Lbl>{t("day.addBlock")}</Lbl></button>}
+      {id && <button type="button" class="btn btn-ghost btn-sm sm:btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
+      {id && <button type="button" class="btn btn-ghost btn-sm sm:btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" /><Lbl>{t("cancel")}</Lbl></button>}
+      {id ? <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" /><Lbl>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" /><Lbl>{t("day.addBlock")}</Lbl></button>}
     </div>
   </form>
 );
@@ -167,6 +176,7 @@ dayRoutes.get("/day/:date", async (c) => {
   const target = day ? new Decimal(day.entry.targetHours) : defaultTargetHours(date);
   const blocks = day?.blocks ?? [];
   const actual = day ? dayActualHours(blocks.map((b) => ({ start: b.startTime, end: b.endTime, breakHours: b.breakHours }))) : null;
+  const saldo = (actual ?? new Decimal(0)).minus(target);
   const returnTo = c.req.query("from") === "dashboard" ? "/" : `/month/${date.slice(0, 7)}`;
   const weekday = weekdayName(new Date(`${date}T00:00:00Z`).getUTCDay(), "long");
 
@@ -176,7 +186,7 @@ dayRoutes.get("/day/:date", async (c) => {
         <h1 class="text-xl sm:text-2xl font-bold">{weekday}, <span class="whitespace-nowrap">{dateLong(date)}</span></h1>
         {day && (
           <>
-            <button type="button" class="btn btn-error btn-sm" onclick="document.getElementById('delete-modal').showModal()">{t("delete")}</button>
+            <button type="button" class="btn btn-error btn-sm sm:btn-md" onclick="document.getElementById('delete-modal').showModal()">{t("delete")}</button>
             <dialog id="delete-modal" class="modal modal-bottom sm:modal-middle">
               <div class="modal-box">
                 <h3 class="font-bold text-lg">{t("day.deleteTitle")}</h3>
@@ -192,14 +202,22 @@ dayRoutes.get("/day/:date", async (c) => {
           </>
         )}
       </div>
+      <div class="stats bg-base-200 w-full mb-4">
+        <div class="stat">
+          <div class="stat-title">{t("actual")}</div>
+          <div class="stat-value">{formatHM(actual ?? new Decimal(0))}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">{t("saldo")}</div>
+          <div class={`stat-value ${saldo.gt(0) ? "text-success" : saldo.lt(0) ? "text-error" : ""}`}>{formatHM(saldo, true)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">{t("dash.todayBreak")}</div>
+          <div class="stat-value">{formatHM(blocks.reduce((s, b) => s.plus(b.breakHours), new Decimal(0)))}</div>
+        </div>
+      </div>
       <div class="card bg-base-200 p-4 space-y-4">
         <BlocksSection date={date} blocks={blocks} />
-        {actual && (
-          <div class="flex justify-between items-center rounded-box bg-base-100 p-3">
-            <span>{t("dash.actualColon")} <strong>{formatHM(actual)}</strong></span>
-            <span>{t("day.saldoColon")} <SaldoBadge value={dailySaldo(actual, target)} /></span>
-          </div>
-        )}
         <form method="post" action={`/day/${date}`} class="space-y-3">
           <input type="hidden" name="return_to" value={returnTo} />
           <div class="flex flex-wrap gap-3">
@@ -213,8 +231,8 @@ dayRoutes.get("/day/:date", async (c) => {
             </label>
           </div>
           <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <a href={returnTo} class="btn btn-ghost btn-sm">{t("cancel")}</a>
-            <button class="btn btn-primary btn-sm sm:px-10">{t("save")}</button>
+            <a href={returnTo} class="btn btn-ghost btn-sm sm:btn-md">{t("cancel")}</a>
+            <button class="btn btn-primary btn-sm sm:btn-md sm:px-10">{t("save")}</button>
           </div>
         </form>
       </div>
