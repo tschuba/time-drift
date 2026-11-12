@@ -177,7 +177,7 @@ describe("analytics", () => {
       day("2026-05-12", "22:00:00", "02:00:00", "0"), // 4h -> -4
       day("2026-05-13", "08:00:00", null), // running -> 0 actual
     ]);
-    const html = await (await app.request("/analytics?range=all&heatmap_year=2026")).text();
+    const html = await (await app.request("/analytics?range=all")).text();
     expect(html).toContain("06:15"); // avg of workdays with actual > 0: (8.5 + 4) / 2
     expect(html).toContain("Monday");
     expect(html).toContain("33.3%"); // 1 of 3 workdays over target
