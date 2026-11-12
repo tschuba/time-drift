@@ -1,5 +1,6 @@
 {
   "name": "time-drift",
+  "license": "AGPL-3.0-only",
   "version": "0.2.0",
   "type": "module",
   "packageManager": "pnpm@12.5.1",

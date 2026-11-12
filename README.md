@@ -96,3 +96,7 @@ Required once for the release automation:
 2. **Secret `RELEASE_TOKEN`** (Settings → Secrets and variables → Actions): a personal access token with `contents: write` and `pull requests: write` on this repo (fine-grained PAT). Without it the workflow falls back to `GITHUB_TOKEN`; the tag is then created but does **not** trigger the image build in `build.yml`.
 3. **Packages:** the GHCR image is pushed with `GITHUB_TOKEN` (`packages: write`); on first push, make sure the package is linked to the repo and has the desired visibility.
 4. **Branch protection on `main`** (recommended): require PRs and the `test` check; allow merging the Release PR. Local hooks (`.githooks`) also forbid direct commits to `main` and enforce Conventional Commits, so use squash-merge with a Conventional Commit PR title.
+
+## License
+
+[AGPL-3.0](LICENSE)
