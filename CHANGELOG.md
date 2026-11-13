@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.5.0...time-drift-v0.6.0) (2026-11-13)
+
+
+### Features
+
+* history date presets and time-based break input ([#22](https://github.com/tschuba/time-drift/issues/22)) ([e0d7696](https://github.com/tschuba/time-drift/commit/e0d76965a1923b87f1223b44b88a4d36d2cb3888))
+
+
+### Bug Fixes
+
+* **analytics:** always show 'All' range, clear year on click, localize range buttons ([#20](https://github.com/tschuba/time-drift/issues/20)) ([ddad239](https://github.com/tschuba/time-drift/commit/ddad23968c6aeceee096a24cc250394aa1a21efe))
+
 ## [0.5.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.4.0...time-drift-v0.5.0) (2026-11-12)
 
 
