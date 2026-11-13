@@ -54,16 +54,16 @@ dashboardRoutes.get("/", async (c) => {
       <div class="card bg-base-200 p-4 mb-4">
         <div class="flex flex-wrap justify-between gap-2 mb-2">
           <h2 class="font-semibold">{t("dash.today")} — {weekday(now.getDay(), "long")}, {dateLong(today)}</h2>
-          <a class="btn btn-sm sm:btn-md" href={`/day/${today}?from=dashboard`} aria-label={t("dash.fullEditor")} title={t("dash.fullEditor")}><Ico n="maximize" /><Lbl>{t("dash.fullEditor")}</Lbl></a>
+          <a class="btn btn-md" href={`/day/${today}?from=dashboard`} aria-label={t("dash.fullEditor")} title={t("dash.fullEditor")}><Ico n="maximize" /><Lbl>{t("dash.fullEditor")}</Lbl></a>
         </div>
         <form method="post" action={`/day/${today}`}>
           <input type="hidden" name="return_to" value="/" />
           <div class="flex flex-wrap gap-3 items-center mb-3">
             <label class="floating-label">
               <span>{t("dash.targetH")}</span>
-              <input class="input input-sm sm:input-md w-28" placeholder={t("dash.targetH")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
+              <input class="input input-md w-28" placeholder={t("dash.targetH")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
             </label>
-            <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("save")} title={t("save")}><Ico n="save" /><Lbl>{t("save")}</Lbl></button>
+            <button class="btn btn-primary btn-md" aria-label={t("save")} title={t("save")}><Ico n="save" /><Lbl>{t("save")}</Lbl></button>
           </div>
           <input type="hidden" name="note" value={todayDay?.entry.note ?? ""} />
         </form>

@@ -65,7 +65,7 @@ describe("day", () => {
   });
 
   it("adds a block, parsing times and break", async () => {
-    const res = await post("/day/2026-05-11/blocks", { start: "8:00", end: "1700", brk: "0.5" });
+    const res = await post("/day/2026-05-11/blocks", { start: "8:00", end: "1700", brk: "00:30" });
     expect(res.headers.get("hx-refresh")).toBe("true");
     expect(q.addBlock).toHaveBeenCalledWith("2026-05-11", "8", { start: "08:00", end: "17:00", breakHours: "0.5" });
   });
@@ -77,7 +77,7 @@ describe("day", () => {
 
   it("rejects a block without valid start or with bad break", async () => {
     expect((await post("/day/2026-05-11/blocks", { start: "bad" })).status).toBe(400);
-    expect((await post("/day/2026-05-11/blocks", { start: "08:00", brk: "-1" })).status).toBe(400);
+    expect((await post("/day/2026-05-11/blocks", { start: "08:00", brk: "abc" })).status).toBe(400);
     expect(q.addBlock).not.toHaveBeenCalled();
   });
 

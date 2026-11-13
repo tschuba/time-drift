@@ -8,6 +8,21 @@ import {dailySaldo, dayActualHours, formatHM } from "../lib/time.js";
 const PAGE_SIZE = 50;
 const validDate = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? s : undefined);
 
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function presets() {
+  const n = new Date();
+  const [y, m, d] = [n.getFullYear(), n.getMonth(), n.getDate()];
+  return [
+    { key: "hist.q.7d", from: iso(new Date(y, m, d - 6)), to: iso(n) },
+    { key: "hist.q.30d", from: iso(new Date(y, m, d - 29)), to: iso(n) },
+    { key: "hist.q.month", from: iso(new Date(y, m, 1)), to: iso(new Date(y, m + 1, 0)) },
+    { key: "hist.q.lastMonth", from: iso(new Date(y, m - 1, 1)), to: iso(new Date(y, m, 0)) },
+    { key: "hist.q.year", from: `${y}-01-01`, to: `${y}-12-31` },
+    { key: "hist.q.lastYear", from: `${y - 1}-01-01`, to: `${y - 1}-12-31` },
+  ] as const;
+}
+
 export const historyRoutes = new Hono();
 
 historyRoutes.get("/history", async (c) => {
@@ -23,11 +38,18 @@ historyRoutes.get("/history", async (c) => {
     <Layout title={t("hist.title")} nav="/history">
       <h1 class="text-2xl font-bold mb-4">{t("hist.title")}</h1>
       <form method="get" action="/history" class="flex flex-wrap gap-2 items-end mb-4">
-        <label class="floating-label"><span>{t("hist.from")}</span><input class="input input-sm sm:input-md" type="date" name="from" placeholder={t("hist.from")} value={from ?? ""} /></label>
-        <label class="floating-label"><span>{t("hist.to")}</span><input class="input input-sm sm:input-md" type="date" name="to" placeholder={t("hist.to")} value={to ?? ""} /></label>
-        <button class="btn btn-primary btn-sm sm:btn-md">{t("hist.filter")}</button>
-        {(from || to) && <a href="/history" class="btn btn-sm sm:btn-md">{t("hist.clear")}</a>}
+        <label class="floating-label"><span>{t("hist.from")}</span><input class="input input-md" type="date" name="from" placeholder={t("hist.from")} value={from ?? ""} /></label>
+        <label class="floating-label"><span>{t("hist.to")}</span><input class="input input-md" type="date" name="to" placeholder={t("hist.to")} value={to ?? ""} /></label>
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-md max-sm:btn-square" aria-label={t("hist.filter")} title={t("hist.filter")}><svg class="w-5 h-5 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 4h18l-7 8v6l-4 2v-8z" /></svg><span class="max-sm:hidden">{t("hist.filter")}</span></button>
+          {(from || to) && <a href="/history" class="btn btn-md max-sm:btn-square" aria-label={t("hist.clear")} title={t("hist.clear")}><svg class="w-5 h-5 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12" /></svg><span class="max-sm:hidden">{t("hist.clear")}</span></a>}
+        </div>
       </form>
+      <div class="flex flex-wrap gap-2 mb-4">
+        {presets().map((p) => (
+          <a href={`/history?from=${p.from}&to=${p.to}`} class={`btn btn-md ${p.from === from && p.to === to ? "btn-primary" : "btn-outline"}`}>{t(p.key)}</a>
+        ))}
+      </div>
       {days.length === 0 ? (
         <div class="alert" role="status">
           <span>{from || to ? t("hist.emptyRange") : t("hist.empty")} <a class="link" href="/">{t("hist.track")}</a></span>
@@ -58,9 +80,9 @@ historyRoutes.get("/history", async (c) => {
       )}
       {totalPages > 1 && (
         <div class="join flex justify-center my-4">
-          <a class={`join-item btn btn-sm sm:btn-md ${page > 1 ? "" : "btn-disabled"}`} href={qs(page - 1)}>{t("hist.prev")}</a>
-          <span class="join-item btn btn-sm sm:btn-md no-animation pointer-events-none">{t("hist.page", { p: page, n: totalPages })}</span>
-          <a class={`join-item btn btn-sm sm:btn-md ${page < totalPages ? "" : "btn-disabled"}`} href={qs(page + 1)}>{t("hist.next")}</a>
+          <a class={`join-item btn btn-md ${page > 1 ? "" : "btn-disabled"}`} href={qs(page - 1)}>{t("hist.prev")}</a>
+          <span class="join-item btn btn-md no-animation pointer-events-none">{t("hist.page", { p: page, n: totalPages })}</span>
+          <a class={`join-item btn btn-md ${page < totalPages ? "" : "btn-disabled"}`} href={qs(page + 1)}>{t("hist.next")}</a>
         </div>
       )}
       <div class="text-center text-sm opacity-70">{t("hist.total", { n: total })}</div>
