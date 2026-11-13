@@ -8,6 +8,21 @@ import {dailySaldo, dayActualHours, formatHM } from "../lib/time.js";
 const PAGE_SIZE = 50;
 const validDate = (s?: string) => (s && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s)) ? s : undefined);
 
+const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+function presets() {
+  const n = new Date();
+  const [y, m, d] = [n.getFullYear(), n.getMonth(), n.getDate()];
+  return [
+    { key: "hist.q.7d", from: iso(new Date(y, m, d - 6)), to: iso(n) },
+    { key: "hist.q.30d", from: iso(new Date(y, m, d - 29)), to: iso(n) },
+    { key: "hist.q.month", from: iso(new Date(y, m, 1)), to: iso(new Date(y, m + 1, 0)) },
+    { key: "hist.q.lastMonth", from: iso(new Date(y, m - 1, 1)), to: iso(new Date(y, m, 0)) },
+    { key: "hist.q.year", from: `${y}-01-01`, to: `${y}-12-31` },
+    { key: "hist.q.lastYear", from: `${y - 1}-01-01`, to: `${y - 1}-12-31` },
+  ] as const;
+}
+
 export const historyRoutes = new Hono();
 
 historyRoutes.get("/history", async (c) => {
@@ -25,9 +40,16 @@ historyRoutes.get("/history", async (c) => {
       <form method="get" action="/history" class="flex flex-wrap gap-2 items-end mb-4">
         <label class="floating-label"><span>{t("hist.from")}</span><input class="input input-sm sm:input-md" type="date" name="from" placeholder={t("hist.from")} value={from ?? ""} /></label>
         <label class="floating-label"><span>{t("hist.to")}</span><input class="input input-sm sm:input-md" type="date" name="to" placeholder={t("hist.to")} value={to ?? ""} /></label>
-        <button class="btn btn-primary btn-sm sm:btn-md">{t("hist.filter")}</button>
-        {(from || to) && <a href="/history" class="btn btn-sm sm:btn-md">{t("hist.clear")}</a>}
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-sm sm:btn-md">{t("hist.filter")}</button>
+          {(from || to) && <a href="/history" class="btn btn-sm sm:btn-md">{t("hist.clear")}</a>}
+        </div>
       </form>
+      <div class="flex flex-wrap gap-2 mb-4">
+        {presets().map((p) => (
+          <a href={`/history?from=${p.from}&to=${p.to}`} class={`btn btn-sm sm:btn-md ${p.from === from && p.to === to ? "btn-primary" : "btn-outline"}`}>{t(p.key)}</a>
+        ))}
+      </div>
       {days.length === 0 ? (
         <div class="alert" role="status">
           <span>{from || to ? t("hist.emptyRange") : t("hist.empty")} <a class="link" href="/">{t("hist.track")}</a></span>

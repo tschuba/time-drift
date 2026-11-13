@@ -9,6 +9,10 @@ import {dailySaldo, dayActualHours, defaultTargetHours, formatHM, parseTimeInput
 
 const isDate = (s: string) => /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 export const hhmm = (t: string | null) => (t ? t.slice(0, 5) : "");
+export const brkHHmm = (s: string) => {
+  const m = Math.round(Number(s) * 60);
+  return m > 0 ? `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}` : "";
+};
 export const num = (s: string) => (Number(s) === 0 ? "" : new Decimal(s).toString());
 /** Only same-site paths, to avoid open redirects. */
 const safeReturn = (r: unknown, fallback: string) => (typeof r === "string" && /^\/(?!\/)/.test(r) ? r : fallback);
@@ -84,25 +88,27 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
     {/* Highlight the bar being edited; the style disappears with the form. */}
     {id && <style>{raw(`[data-block="${id}"]{box-shadow:inset 0 0 0 3px light-dark(#0e7490,#facc15),inset 0 0 0 5px var(--color-base-100)}`)}</style>}
     <div class="flex flex-wrap items-end gap-2">
-      <label class="floating-label flex-1 min-w-24">
+      <label class="floating-label flex-1 min-w-40">
         <span>{t("start")}</span>
         <div class="input input-sm sm:input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("start")} type="time" name="start" value={start} required />
           <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.start.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
         </div>
       </label>
-      <label class="floating-label flex-1 min-w-24">
+      <label class="floating-label flex-1 min-w-40">
         <span>{t("end")}</span>
         <div class="input input-sm sm:input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("end")} type="time" name="end" value={end} />
           <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
         </div>
       </label>
-      <label class="floating-label flex-1 min-w-24">
+      <label class="floating-label flex-1 min-w-40">
         <span>{t("breakH")}</span>
-        <div class="input input-sm sm:input-md w-full pr-1 gap-1">
-          <input class="grow min-w-0" type="number" inputmode="decimal" name="brk" value={brk} placeholder={t("breakH")} step="0.25" min="0" max="24" />
-          {[["0.5", "30m"], ["1", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}'`}>{l}</button>)}
+        <div class="input input-sm sm:input-md w-full relative">
+          <input class="grow min-w-0 pr-28" type="time" name="brk" value={brk} placeholder={t("breakH")} />
+          <span class="absolute right-9 top-1/2 -translate-y-1/2 flex">
+            {[["00:30", "30m"], ["01:00", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}'`}>{l}</button>)}
+          </span>
         </div>
       </label>
       {id && <button type="button" class="btn btn-ghost btn-sm sm:btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
@@ -126,9 +132,10 @@ export const BlocksSection = ({ date, blocks }: { date: string; blocks: BlockRow
 
 const parseBlock = (f: Record<string, unknown>): BlockInput | null => {
   const start = parseTimeInput(String(f.start ?? ""));
-  const brk = Number(f.brk);
-  if (!start || (f.brk && (!Number.isFinite(brk) || brk < 0 || brk > 24))) return null;
-  return { start, end: parseTimeInput(String(f.end ?? "")), breakHours: String(brk > 0 ? brk : 0) };
+  const brk = parseTimeInput(String(f.brk ?? ""));
+  if (!start || (String(f.brk ?? "").trim() && !brk)) return null;
+  const [bh, bm] = (brk ?? "00:00").split(":").map(Number);
+  return { start, end: parseTimeInput(String(f.end ?? "")), breakHours: String(+((bh! * 60 + bm!) / 60).toFixed(2)) };
 };
 const isId = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 const refresh = (c: Context) => { c.header("HX-Refresh", "true"); return c.body(null, 204); };
@@ -153,7 +160,7 @@ dayRoutes.get("/day/:date/block/:id/edit", async (c) => {
   const date = c.req.param("date");
   const b = (isDate(date) ? ((await getDay(date))?.blocks ?? []) : []).find((x) => x.id === c.req.param("id"));
   if (!b) return c.text("", 404);
-  return c.html(<BlockEditor date={date} id={b.id} start={hhmm(b.startTime)} end={hhmm(b.endTime)} brk={num(b.breakHours)} />);
+  return c.html(<BlockEditor date={date} id={b.id} start={hhmm(b.startTime)} end={hhmm(b.endTime)} brk={brkHHmm(b.breakHours)} />);
 });
 
 dayRoutes.post("/day/:date/block/:id", async (c) => {
