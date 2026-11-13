@@ -29,7 +29,7 @@ export function LineChart({ points }: { points: Point[] }) {
       <text x={PAD.l - 4} y={y(0) + 4} text-anchor="end" font-size="10">0</text>
       <text x={PAD.l - 4} y={y(Math.max(0, ...vals)) + 4} text-anchor="end" font-size="10">{Math.max(0, ...vals).toFixed(0)}</text>
       <text x={PAD.l - 4} y={y(Math.min(0, ...vals)) + 4} text-anchor="end" font-size="10">{Math.min(0, ...vals).toFixed(0)}</text>
-      <path d={path} fill="none" stroke="currentColor" stroke-width="2" />
+      <path d={path} fill="none" stroke="currentColor" stroke-width="2" class="text-primary" />
       {ticks.map((i) => (
         <g>
           <line x1={x(i)} x2={x(i)} y1={H - PAD.b} y2={H - PAD.b + 4} stroke="currentColor" opacity="0.4" />
@@ -43,7 +43,7 @@ export function LineChart({ points }: { points: Point[] }) {
             <rect x={x(i) - w / 2} y={PAD.t} width={w} height={H - PAD.t - PAD.b} fill="transparent" />
             <g class="opacity-0 group-hover:opacity-100 pointer-events-none">
               <line x1={x(i)} x2={x(i)} y1={PAD.t} y2={H - PAD.b} stroke="currentColor" opacity="0.4" />
-              <circle cx={x(i)} cy={y(p.value)} r="4" fill="currentColor" />
+              <circle cx={x(i)} cy={y(p.value)} r="4" fill="currentColor" class="text-primary" />
               <text x={x(i)} y={14} font-size="11" font-weight="bold" text-anchor={anchor(i, points.length)}>
                 {dateLong(p.label)}: {formatHM(p.value, true)}
               </text>
@@ -71,8 +71,8 @@ export function BarChart({ bars }: { bars: { label: string; actual: number; targ
         return (
           <g class="group">
             <rect x={cx - slot / 2} y={PAD.t} width={slot} height={H - PAD.t - PAD.b} fill="currentColor" opacity="0" class="group-hover:opacity-10" />
-            <rect x={cx - bw} y={y(b.target)} width={bw} height={y(0) - y(b.target)} fill="currentColor" opacity="0.25" />
-            <rect x={cx} y={y(b.actual)} width={bw} height={y(0) - y(b.actual)} fill="currentColor" />
+            <rect x={cx - bw} y={y(b.target)} width={bw} height={y(0) - y(b.target)} fill="currentColor" opacity="0.35" class="text-secondary" />
+            <rect x={cx} y={y(b.actual)} width={bw} height={y(0) - y(b.actual)} fill="currentColor" class="text-primary" />
             {(bars.length <= 12 || i % Math.ceil(bars.length / 12) === 0) && (
               <text x={cx} y={H - 6} font-size="9" text-anchor="middle">{b.label}</text>
             )}
@@ -98,7 +98,7 @@ export function Heatmap({ year, days }: { year: number; days: Map<string, number
     const h = days.get(iso);
     const opacity = h === undefined ? 0.06 : h <= 0 ? 0.1 : Math.min(1, 0.25 + h / 12);
     cells.push(
-      <rect x={col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity}>
+      <rect x={col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity} class={h && h > 0 ? "text-success" : ""}>
         <title>{dateLong(iso)}{h === undefined ? "" : `: ${formatHM(h)}`}</title>
       </rect>,
     );
