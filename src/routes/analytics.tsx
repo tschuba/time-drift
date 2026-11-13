@@ -20,7 +20,7 @@ analyticsRoutes.get("/analytics", async (c) => {
   // Year is the outer scope; the range window is counted back from its end (or today).
   const yearParam = Math.floor(Number(c.req.query("year"))) || null;
   const heatYear = yearParam ?? now.getFullYear();
-  const effRange = yearParam && range === "1y" ? "all" : range; // within a year, 1y == whole year
+  const effRange = range;
   const months = { "3m": 3, "6m": 6, "1y": 12, all: 0 }[effRange]!;
   const to = yearParam && `${yearParam}-12-31` < today ? `${yearParam}-12-31` : today;
   const end = new Date(`${to}T00:00:00`);
@@ -37,7 +37,7 @@ analyticsRoutes.get("/analytics", async (c) => {
   const inPeriod = days.filter((d) => d.date >= from && d.date <= to);
   const years = [...new Set([...days.map((d) => Number(d.date.slice(0, 4))), now.getFullYear()])].sort((a, b) => b - a);
   // Clicking the active year clears it.
-  const yearHref = (y: number | null) => `/analytics?range=${range}${y ? `&year=${y}` : ""}`;
+  const yearHref = (y: number | null) => `/analytics?range=${y && range === "all" ? "1y" : range}${y ? `&year=${y}` : ""}`;
   const workdays = inPeriod.filter((d) => d.target > 0);
   const byWd = Array.from({ length: 7 }, (_, wd) => avg(workdays.filter((d) => new Date(`${d.date}T00:00:00Z`).getUTCDay() === wd).map((d) => d.actual)));
   const busiest = workdays.length ? weekday(byWd.indexOf(Math.max(...byWd)), "long") : t("an.na");
@@ -70,8 +70,8 @@ analyticsRoutes.get("/analytics", async (c) => {
         <h1 class="text-2xl font-bold">{t("an.title")}</h1>
         <div class="flex flex-wrap gap-2">
           <div class="join">
-            {(["3m", "6m", "1y", "all"] as const).filter((r) => !(yearParam && r === "1y")).map((r) => (
-              <a class={`btn btn-sm sm:btn-md join-item ${r === effRange ? "btn-primary" : ""}`} href={`/analytics?range=${r}${yearParam ? `&year=${yearParam}` : ""}`}>{r === "all" ? t("an.all") : r.toUpperCase()}</a>
+            {(["3m", "6m", "1y", "all"] as const).map((r) => (
+              <a class={`btn btn-sm sm:btn-md join-item ${r === effRange ? "btn-primary" : ""}`} href={`/analytics?range=${r}${yearParam && r !== "all" ? `&year=${yearParam}` : ""}`}>{t(`an.${r}`)}</a>
             ))}
           </div>
           <div class="join">
