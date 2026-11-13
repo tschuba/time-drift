@@ -90,30 +90,30 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
     <div class="flex flex-wrap items-end gap-2">
       <label class="floating-label flex-1 min-w-40">
         <span>{t("start")}</span>
-        <div class="input input-sm sm:input-md w-full relative">
+        <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("start")} type="time" name="start" value={start} required />
           <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.start.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
         </div>
       </label>
       <label class="floating-label flex-1 min-w-40">
         <span>{t("end")}</span>
-        <div class="input input-sm sm:input-md w-full relative">
+        <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("end")} type="time" name="end" value={end} />
           <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
         </div>
       </label>
       <label class="floating-label flex-1 min-w-40">
         <span>{t("breakH")}</span>
-        <div class="input input-sm sm:input-md w-full relative">
+        <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-28" type="time" name="brk" value={brk} placeholder={t("breakH")} />
           <span class="absolute right-9 top-1/2 -translate-y-1/2 flex">
             {[["00:30", "30m"], ["01:00", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}'`}>{l}</button>)}
           </span>
         </div>
       </label>
-      {id && <button type="button" class="btn btn-ghost btn-sm sm:btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
-      {id && <button type="button" class="btn btn-ghost btn-sm sm:btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" /><Lbl>{t("cancel")}</Lbl></button>}
-      {id ? <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" /><Lbl>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-sm sm:btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" /><Lbl>{t("day.addBlock")}</Lbl></button>}
+      {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
+      {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" /><Lbl>{t("cancel")}</Lbl></button>}
+      {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" /><Lbl>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" /><Lbl>{t("day.addBlock")}</Lbl></button>}
     </div>
   </form>
 );
@@ -193,7 +193,7 @@ dayRoutes.get("/day/:date", async (c) => {
         <h1 class="text-xl sm:text-2xl font-bold">{weekday}, <span class="whitespace-nowrap">{dateLong(date)}</span></h1>
         {day && (
           <>
-            <button type="button" class="btn btn-error btn-sm sm:btn-md" onclick="document.getElementById('delete-modal').showModal()">{t("delete")}</button>
+            <button type="button" class="btn btn-error btn-md" onclick="document.getElementById('delete-modal').showModal()">{t("delete")}</button>
             <dialog id="delete-modal" class="modal modal-bottom sm:modal-middle">
               <div class="modal-box">
                 <h3 class="font-bold text-lg">{t("day.deleteTitle")}</h3>
@@ -230,16 +230,16 @@ dayRoutes.get("/day/:date", async (c) => {
           <div class="flex flex-wrap gap-3">
             <label class="floating-label">
               <span>{t("day.targetHours")}</span>
-              <input class="input input-sm sm:input-md w-28" placeholder={t("day.targetHours")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
+              <input class="input input-md w-28" placeholder={t("day.targetHours")} type="number" inputmode="decimal" name="target_hours" value={target.toString()} step="0.5" min="0" max="24" />
             </label>
             <label class="floating-label flex-1 min-w-48">
               <span>{t("note")}</span>
-              <textarea class="textarea textarea-sm sm:textarea-md w-full" name="note" rows={1} placeholder={t("day.notePlaceholder")}>{day?.entry.note ?? ""}</textarea>
+              <textarea class="textarea textarea-md w-full" name="note" rows={1} placeholder={t("day.notePlaceholder")}>{day?.entry.note ?? ""}</textarea>
             </label>
           </div>
           <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <a href={returnTo} class="btn btn-ghost btn-sm sm:btn-md">{t("cancel")}</a>
-            <button class="btn btn-primary btn-sm sm:btn-md sm:px-10">{t("save")}</button>
+            <a href={returnTo} class="btn btn-ghost btn-md">{t("cancel")}</a>
+            <button class="btn btn-primary btn-md sm:px-10">{t("save")}</button>
           </div>
         </form>
       </div>

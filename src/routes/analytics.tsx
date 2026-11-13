@@ -71,13 +71,13 @@ analyticsRoutes.get("/analytics", async (c) => {
         <div class="flex flex-wrap gap-2">
           <div class="join">
             {(["3m", "6m", "1y", "all"] as const).map((r) => (
-              <a class={`btn btn-sm sm:btn-md join-item ${r === effRange ? "btn-primary" : ""}`} href={`/analytics?range=${r}${yearParam && r !== "all" ? `&year=${yearParam}` : ""}`}>{t(`an.${r}`)}</a>
+              <a class={`btn btn-md join-item ${r === effRange ? "btn-primary" : ""}`} href={`/analytics?range=${r}${yearParam && r !== "all" ? `&year=${yearParam}` : ""}`}>{t(`an.${r}`)}</a>
             ))}
           </div>
           <div class="join">
             {years.length > 3 && (
               <details class="dropdown dropdown-start">
-                <summary class={`btn btn-sm sm:btn-md rounded-r-none ${yearParam && !years.slice(0, 3).includes(yearParam) ? "btn-primary" : ""}`}>{yearParam && !years.slice(0, 3).includes(yearParam) ? yearParam : "…"}</summary>
+                <summary class={`btn btn-md rounded-r-none ${yearParam && !years.slice(0, 3).includes(yearParam) ? "btn-primary" : ""}`}>{yearParam && !years.slice(0, 3).includes(yearParam) ? yearParam : "…"}</summary>
                 <ul class="dropdown-content menu bg-base-200 rounded-box z-10 w-28 p-2 shadow max-h-60 overflow-y-auto flex-nowrap">
                   {years.slice(3).map((y) => (
                     <li><a class={y === yearParam ? "menu-active" : ""} href={yearHref(y === yearParam ? null : y)}>{y}</a></li>
@@ -86,7 +86,7 @@ analyticsRoutes.get("/analytics", async (c) => {
               </details>
             )}
             {[...years.slice(0, 3)].reverse().map((y) => (
-              <a class={`btn btn-sm sm:btn-md join-item ${y === yearParam ? "btn-primary" : ""}`} href={yearHref(y === yearParam ? null : y)}>{y}</a>
+              <a class={`btn btn-md join-item ${y === yearParam ? "btn-primary" : ""}`} href={yearHref(y === yearParam ? null : y)}>{y}</a>
             ))}
           </div>
         </div>
@@ -106,8 +106,8 @@ analyticsRoutes.get("/analytics", async (c) => {
       <div class="card bg-base-200 p-4 mb-4">
         <h2 class="font-semibold mb-2">{t("an.monthly")}</h2>
         <div class="flex gap-4 text-xs mb-2">
-          <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 bg-current" />{t("actual")}</span>
-          <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 bg-current opacity-25" />{t("target")}</span>
+          <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 bg-primary" />{t("actual")}</span>
+          <span class="flex items-center gap-1"><i class="inline-block w-3 h-3 bg-secondary opacity-35" />{t("target")}</span>
         </div>
         <BarChart bars={[...monthly].sort().map(([label, v]) => ({ label: monthShort(label), ...v }))} />
       </div>
