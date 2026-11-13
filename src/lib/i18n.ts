@@ -23,7 +23,7 @@ const en = {
   "hist.total": "{n} entries total",
   "an.title": "Analytics", "an.avgHours": "Avg Hours / Workday", "an.avgSaldo": "Avg Daily Saldo", "an.thisMonth": "This Month",
   "an.thisYear": "This Year", "an.busiest": "Busiest Day", "an.overtime": "Overtime Frequency", "an.na": "N/A",
-  "an.trend": "Saldo Trend", "an.all": "All", "an.monthly": "Monthly Hours (Actual vs Target)", "an.intensity": "Work Intensity",
+  "an.trend": "Saldo Trend", "an.all": "All", "an.3m": "3M", "an.6m": "6M", "an.1y": "1Y", "an.monthly": "Monthly Hours (Actual vs Target)", "an.intensity": "Work Intensity",
   "an.heatHint": "Darker = more hours worked. Tap a day for details.",
 };
 
@@ -48,7 +48,7 @@ const de: Partial<Record<keyof typeof en, string>> = {
   "hist.total": "{n} Einträge insgesamt",
   "an.title": "Auswertung", "an.avgHours": "Ø Stunden / Arbeitstag", "an.avgSaldo": "Ø Tagessaldo", "an.thisMonth": "Dieser Monat",
   "an.thisYear": "Dieses Jahr", "an.busiest": "Arbeitsreichster Tag", "an.overtime": "Überstunden-Quote", "an.na": "k. A.",
-  "an.trend": "Saldoverlauf", "an.all": "Alle", "an.monthly": "Monatsstunden (Ist vs. Soll)", "an.intensity": "Arbeitsintensität",
+  "an.trend": "Saldoverlauf", "an.all": "Alle", "an.3m": "3M", "an.6m": "6M", "an.1y": "1J", "an.monthly": "Monatsstunden (Ist vs. Soll)", "an.intensity": "Arbeitsintensität",
   "an.heatHint": "Dunkler = mehr Stunden. Tag antippen für Details.",
 };
 
