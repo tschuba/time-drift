@@ -54,7 +54,7 @@ const Timeline = ({ date, blocks }: { date: string; blocks: BlockRow[] }) => {
               style={`left:${pct(s)}%;width:${pct(end - s + lo)}%;${e === null ? "background-image:repeating-linear-gradient(45deg,transparent 0 6px,rgb(255 255 255/.25) 6px 12px)" : ""}`}
               title={`${hhmm(b.startTime)} – ${e === null ? t("day.running") : hhmm(b.endTime)} · ${dur}${Number(b.breakHours) > 0 ? ` · ${t("day.breakShown", { h: num(b.breakHours) })}` : ""}`}>
               {/* Detail by segment width: range + duration, then duration only, then nothing. */}
-              <span class="hidden @[9rem]:inline">{hhmm(b.startTime)}–{e === null ? <span class="badge badge-warning badge-sm font-bold uppercase gap-1 align-middle"><span class="inline-block size-1.5 rounded-full bg-current animate-pulse" />{t("day.running")}</span> : hhmm(b.endTime)} · </span>
+              <span class="hidden @[9rem]:inline">{hhmm(b.startTime)}–{e === null ? <span data-running class="badge badge-warning badge-sm font-bold uppercase gap-1 align-middle"><span class="inline-block size-1.5 rounded-full bg-current animate-pulse" />{t("day.running")}</span> : hhmm(b.endTime)} · </span>
               <span class="hidden @[3rem]:inline font-semibold">{dur}</span>
               {Number(b.breakHours) > 0 && <span class="hidden @[14rem]:inline"> · {t("day.breakShown", { h: num(b.breakHours) })}</span>}
             </button>
