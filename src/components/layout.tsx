@@ -48,6 +48,8 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
       </footer>
       <div id="flash" class="toast toast-end" role="status" />
       {/* One-shot flash message set by POST handlers; static string, no user input. */}
+      {/* Running blocks: reload each minute unless the user has typed something. */}
+      <script dangerouslySetInnerHTML={{ __html: `(function(){var d=0;addEventListener("input",function(){d=1});if(document.querySelector("[data-running]"))setInterval(function(){if(!d&&!document.hidden)location.reload()},60000)})()` }} />
       <script dangerouslySetInnerHTML={{ __html: `(function(){var m=document.cookie.match(/(?:^|; )flash=([^;]+)/);if(!m)return;document.cookie="flash=; path=/; max-age=0";var f=document.getElementById("flash");f.innerHTML='<div class="alert alert-success"><span></span></div>';f.firstChild.firstChild.textContent=decodeURIComponent(m[1]);setTimeout(function(){f.remove()},3000)})()` }} />
     </body>
   </html>
