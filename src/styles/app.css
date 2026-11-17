@@ -2,3 +2,23 @@
 @plugin "daisyui" {
   themes: light --default, dark --prefersdark;
 }
+
+/* Edge fade hinting horizontal scroll; right fade fades out at the end. Static fallback without scroll-driven animations. */
+@property --fade-l { syntax: "<length>"; inherits: false; initial-value: 0px; }
+@property --fade-r { syntax: "<length>"; inherits: false; initial-value: 24px; }
+@keyframes scroll-fade {
+  0% { --fade-l: 0px; --fade-r: 24px; }
+  10%, 90% { --fade-l: 24px; --fade-r: 24px; }
+  100% { --fade-l: 24px; --fade-r: 0px; }
+}
+@media (max-width: 639px) {
+  .scroll-fade {
+    mask-image: linear-gradient(to right, transparent, black var(--fade-l), black calc(100% - var(--fade-r)), transparent);
+  }
+  @supports (animation-timeline: scroll()) {
+    .scroll-fade { animation: scroll-fade linear both; animation-timeline: scroll(self x); }
+  }
+}
+
+/* History filter actions: icon-only when they still fit in row 1 (672-796px) or when too narrow for text in row 2 (<340px). */
+@custom-variant icon-only (@media (min-width: 672px) and (max-width: 796px), (max-width: 339px));
