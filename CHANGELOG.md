@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.7.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.6.0...time-drift-v0.7.0) (2026-11-17)
+
+
+### Features
+
+* auto-refresh page while a block is running ([#24](https://github.com/tschuba/time-drift/issues/24)) ([043cc15](https://github.com/tschuba/time-drift/commit/043cc15555fe7b3116f0de0d1938203281c49386))
+* preselect running block and forbid overlapping blocks ([#26](https://github.com/tschuba/time-drift/issues/26)) ([ef23a67](https://github.com/tschuba/time-drift/commit/ef23a67f8305c0d28adfc127bf07f487f195ec5d))
+
+
+### Bug Fixes
+
+* **charts:** readable axis labels and hover values in dark theme ([#27](https://github.com/tschuba/time-drift/issues/27)) ([7d67649](https://github.com/tschuba/time-drift/commit/7d676493f67df20e68f551a59095bdeea9ba7c37))
+* **day:** keep block editor layout clean across widths ([#28](https://github.com/tschuba/time-drift/issues/28)) ([9cb1eac](https://github.com/tschuba/time-drift/commit/9cb1eaca4a324263aa060ce0523501ead3d8b43f))
+
 ## [0.6.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.5.0...time-drift-v0.6.0) (2026-11-13)
 
 
