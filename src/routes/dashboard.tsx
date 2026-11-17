@@ -4,7 +4,8 @@ import { Layout, SaldoBadge } from "../components/layout.js";
 import { getDay, getRange, getTotalSaldo } from "../db/queries.js";
 import { dateLong, dateShort, t, weekday } from "../lib/i18n.js";
 import {dailySaldo, dayActualHours, defaultTargetHours, formatHM } from "../lib/time.js";
-import { BlocksSection, Ico, Lbl } from "./day.js";
+import { Ico } from "../components/icons.js";
+import { BlocksSection, Lbl } from "./day.js";
 
 // Local calendar date (server TZ), not UTC.
 const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;

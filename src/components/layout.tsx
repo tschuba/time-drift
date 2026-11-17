@@ -1,6 +1,7 @@
 import type { Child } from "hono/jsx";
 import { readFileSync, statSync } from "node:fs";
 import Decimal from "decimal.js";
+import { Ico } from "./icons.js";
 import { currentPath, lang, t } from "../lib/i18n.js";
 import { formatHM } from "../lib/time.js";
 
@@ -11,8 +12,6 @@ const HTMX = `/static/js/htmx.min.js?v=${ver("js/htmx.min.js")}`;
 
 // Read from package.json at startup (cwd-relative, like public/ above); release-please keeps it current.
 const VERSION: string = (() => { try { return JSON.parse(readFileSync("package.json", "utf8")).version; } catch { return "dev"; } })();
-
-const THEME_ICONS = ["M3 5h18v11H3zM8 20h8M12 16v4", "M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4", "M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"];
 
 export const Layout = ({ title, nav, children }: { title: string; nav?: string; children?: Child }) => (
   <html lang={lang()}>
@@ -37,15 +36,15 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
         </ul>
         <div class="order-2 sm:order-3">
           <button type="button" id="theme-btn" popovertarget="theme-pop" style="anchor-name:--theme" class="btn btn-ghost btn-sm" aria-label={t("settings.label")} title={t("settings.label")}>
-            <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h1M11 12h9M4 18h11M21 18h-1" /><circle cx="16" cy="6" r="2.5" /><circle cx="8" cy="12" r="2.5" /><circle cx="17.5" cy="18" r="2.5" /></svg>
+            <Ico n="adjustments" cls="size-4" />
           </button>
           <div id="theme-pop" popover="auto" style="position-anchor:--theme" class="dropdown dropdown-end mt-1 p-3 bg-base-200 border border-base-300 rounded-box shadow-lg w-64 max-w-[calc(100vw-1rem)] flex-col gap-3">
             <div class="text-xs font-semibold uppercase tracking-wide opacity-60">{t("theme.label")}</div>
             <div class="join w-full" role="radiogroup" aria-label={t("theme.label")}>
-              {[["light", t("theme.light"), THEME_ICONS[1]], ["", t("theme.auto"), THEME_ICONS[0]], ["dark", t("theme.dark"), THEME_ICONS[2]]].map(([v, l, d]) => (
+              {([["light", t("theme.light"), "sun"], ["", t("theme.auto"), "device"], ["dark", t("theme.dark"), "moon"]] as const).map(([v, l, n]) => (
                 <label class="btn h-auto min-h-11 py-1.5 flex-1 flex-col gap-0.5 text-xs font-normal join-item has-checked:btn-primary" title={l}>
                   <input type="radio" name="theme" value={v} class="sr-only" aria-label={l} />
-                  <svg xmlns="http://www.w3.org/2000/svg" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={d} /></svg>
+                  <Ico n={n} cls="size-4" />
                   {l}
                 </label>
               ))}
