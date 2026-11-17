@@ -2,6 +2,7 @@ import Decimal from "decimal.js";
 import { Hono, type Context } from "hono";
 import { setCookie } from "hono/cookie";
 import { raw } from "hono/html";
+import { Ico } from "../components/icons.js";
 import { ErrorPage, Layout } from "../components/layout.js";
 import { addBlock, deleteBlock, deleteDay, getDay, saveEntry, updateBlock, type BlockInput, type BlockRow } from "../db/queries.js";
 import { dateLong, t, weekday as weekdayName } from "../lib/i18n.js";
@@ -68,18 +69,6 @@ const Timeline = ({ date, blocks }: { date: string; blocks: BlockRow[] }) => {
   );
 };
 
-// Tabler Icons (outline, MIT)
-const ICON = {
-  trash: ["M4 7l16 0", "M10 11l0 6", "M14 11l0 6", "M5 7l1 12a2 2 0 0 0 2 2h8a2 2 0 0 0 2 -2l1 -12", "M9 7v-3a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v3"],
-  x: ["M18 6l-12 12", "M6 6l12 12"],
-  check: ["M5 12l5 5l10 -10"],
-  save: ["M6 4h10l4 4v10a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2v-12a2 2 0 0 1 2 -2", "M10 14a2 2 0 1 0 4 0a2 2 0 1 0 -4 0", "M14 4l0 4l-6 0l0 -4"],
-  clockPlus: ["M20.984 12.535a9 9 0 1 0 -8.468 8.45", "M16 19h6", "M19 16v6", "M12 7v5l3 3"],
-  maximize: ["M16 4l4 0l0 4", "M14 10l6 -6", "M8 20l-4 0l0 -4", "M4 20l6 -6", "M16 20l4 0l0 -4", "M14 14l6 6", "M8 4l-4 0l0 4", "M4 4l6 6"],
-};
-export const Ico = ({ n, always }: { n: keyof typeof ICON; always?: boolean }) => (
-  <svg class={always ? "w-5 h-5" : "w-5 h-5 sm:hidden"} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{ICON[n].map((d) => <path d={d} />)}</svg>
-);
 // cq: reveal by editor width (container query) instead of viewport; 34rem = fields share one row, buttons wrap below; from 46rem everything fits on one row, so back to icon-only.
 export const Lbl = ({ children, cq, keep }: { children: string; cq?: boolean; keep?: boolean }) => <span class={cq ? `hidden @[34rem]:inline${keep ? "" : " @[46rem]:hidden"}` : "hidden sm:inline"}>{children}</span>;
 
@@ -113,9 +102,9 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
         </div>
       </label>
       <div class="flex gap-2 ml-auto">
-        {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" always /><Lbl cq>{t("delete")}</Lbl></button>}
-        {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" always /><Lbl cq>{t("cancel")}</Lbl></button>}
-        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" always /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" always /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
+        {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico c="icon-[tabler--trash]" /><Lbl cq>{t("delete")}</Lbl></button>}
+        {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico c="icon-[tabler--x]" /><Lbl cq>{t("cancel")}</Lbl></button>}
+        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico c="icon-[tabler--check]" /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico c="icon-[tabler--clock-plus]" /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
       </div>
     </div>
   </form>

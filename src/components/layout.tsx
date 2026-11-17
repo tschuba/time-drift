@@ -1,6 +1,7 @@
 import type { Child } from "hono/jsx";
 import { readFileSync, statSync } from "node:fs";
 import Decimal from "decimal.js";
+import { Ico } from "./icons.js";
 import { currentPath, lang, t } from "../lib/i18n.js";
 import { formatHM } from "../lib/time.js";
 
@@ -18,7 +19,7 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       {/* Apply a saved theme before first paint; without one, daisyUI follows prefers-color-scheme. */}
-      <script dangerouslySetInnerHTML={{ __html: `try{var s=localStorage.getItem("theme");if(s)document.documentElement.dataset.theme=s}catch(e){}` }} />
+      <script dangerouslySetInnerHTML={{ __html: `try{var s=localStorage.getItem("theme");if(s)document.documentElement.dataset.theme=s}catch(e){}addEventListener("DOMContentLoaded",function(){var s="";try{s=localStorage.getItem("theme")||""}catch(e){}document.querySelectorAll("input[name=theme]").forEach(function(r){r.checked=r.value===s;r.onchange=function(){var d=document.documentElement;if(r.value)d.dataset.theme=r.value;else delete d.dataset.theme;try{r.value?localStorage.setItem("theme",r.value):localStorage.removeItem("theme")}catch(e){}document.getElementById("theme-pop").hidePopover()}})})` }} />
       <title>{title} — Time Drift</title>
       <link rel="stylesheet" href={CSS} />
       <script src={HTMX} defer />
@@ -33,12 +34,29 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
             <li><a href={href} class={nav === href ? "menu-active" : ""} aria-current={nav === href ? "page" : undefined}>{text}</a></li>
           ))}
         </ul>
-        <button type="button" class="btn btn-ghost btn-xs order-2 sm:order-3" aria-label={t("theme.toggle")} title={t("theme.toggle")}
-          onclick={`var d=document.documentElement,n=(d.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark"?"light":"dark";d.dataset.theme=n;try{localStorage.setItem("theme",n)}catch(e){}`}>◐</button>
-        <div class="join order-2 sm:order-3" role="group" aria-label="Language">
-          {["de", "en"].map((l) => (
-            <a class={`btn btn-xs join-item ${l === lang() ? "btn-primary" : ""}`} href={`/lang/${l}?next=${encodeURIComponent(currentPath())}`} hreflang={l} aria-current={l === lang() ? "true" : undefined}>{l.toUpperCase()}</a>
-          ))}
+        <div class="order-2 sm:order-3">
+          <button type="button" id="theme-btn" popovertarget="theme-pop" style="anchor-name:--theme" class="btn btn-ghost btn-sm" aria-label={t("settings.label")} title={t("settings.label")}>
+            <Ico c="icon-[tabler--adjustments-horizontal]" />
+          </button>
+          <div id="theme-pop" popover="auto" style="position-anchor:--theme" class="dropdown dropdown-end mt-1 p-3 bg-base-200 border border-base-300 rounded-box shadow-lg w-64 max-w-[calc(100vw-1rem)] flex-col gap-3">
+            <div class="text-xs font-semibold uppercase tracking-wide opacity-60">{t("theme.label")}</div>
+            <div class="join w-full" role="radiogroup" aria-label={t("theme.label")}>
+              {([["light", t("theme.light"), "icon-[tabler--sun]"], ["", t("theme.auto"), "icon-[tabler--device-desktop]"], ["dark", t("theme.dark"), "icon-[tabler--moon]"]]).map(([v, l, ic]) => (
+                <label class="btn h-auto min-h-11 py-1.5 flex-1 flex-col gap-0.5 text-xs font-normal join-item has-checked:btn-primary" title={l}>
+                  <input type="radio" name="theme" value={v} class="sr-only" aria-label={l} />
+                  <Ico c={ic} />
+                  {l}
+                </label>
+              ))}
+            </div>
+            <div class="divider my-0" />
+            <div class="text-xs font-semibold uppercase tracking-wide opacity-60">{t("lang.label")}</div>
+            <div class="join w-full" role="group" aria-label={t("lang.label")}>
+              {[["de", "Deutsch"], ["en", "English"]].map(([l, n]) => (
+                <a class={`btn btn-md join-item flex-1 ${l === lang() ? "btn-primary" : ""}`} href={`/lang/${l}?next=${encodeURIComponent(currentPath())}`} hreflang={l} aria-current={l === lang() ? "true" : undefined}>{n}</a>
+              ))}
+            </div>
+          </div>
         </div>
       </nav>
       <main class="max-w-4xl mx-auto p-4">{children}</main>

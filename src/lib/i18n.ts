@@ -4,7 +4,7 @@ import { getCookie, setCookie } from "hono/cookie";
 
 const en = {
   "nav.label": "Main", "nav.dashboard": "Dashboard", "nav.month": "Month", "nav.analytics": "Analytics", "nav.history": "History",
-  "save": "Save", "cancel": "Cancel", "delete": "Delete", "back": "← Back", "close": "Close", "theme.toggle": "Toggle dark mode",
+  "save": "Save", "cancel": "Cancel", "delete": "Delete", "back": "← Back", "close": "Close", "settings.label": "Settings", "lang.label": "Language", "theme.label": "Theme", "theme.auto": "Auto", "theme.light": "Light", "theme.dark": "Dark",
   "date": "Date", "actual": "Actual", "target": "Target", "saldo": "Saldo", "note": "Note", "start": "Start", "end": "End",
   "breakH": "Break (h)", "now": "Now", "noData": "No data",
   "flash.saved": "Saved", "flash.deleted": "Deleted",
@@ -30,7 +30,7 @@ const en = {
 
 const de: Partial<Record<keyof typeof en, string>> = {
   "nav.label": "Hauptnavigation", "nav.dashboard": "Übersicht", "nav.month": "Monat", "nav.analytics": "Auswertung", "nav.history": "Verlauf",
-  "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "back": "← Zurück", "close": "Schließen", "theme.toggle": "Dunkelmodus umschalten",
+  "save": "Speichern", "cancel": "Abbrechen", "delete": "Löschen", "back": "← Zurück", "close": "Schließen", "settings.label": "Einstellungen", "lang.label": "Sprache", "theme.label": "Design", "theme.auto": "Auto", "theme.light": "Hell", "theme.dark": "Dunkel",
   "date": "Datum", "actual": "Ist", "target": "Soll", "saldo": "Saldo", "note": "Notiz", "start": "Start", "end": "Ende",
   "breakH": "Pause (h)", "now": "Jetzt", "noData": "Keine Daten",
   "flash.saved": "Gespeichert", "flash.deleted": "Gelöscht",
