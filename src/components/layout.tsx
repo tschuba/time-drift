@@ -36,15 +36,15 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
         </ul>
         <div class="order-2 sm:order-3">
           <button type="button" id="theme-btn" popovertarget="theme-pop" style="anchor-name:--theme" class="btn btn-ghost btn-sm" aria-label={t("settings.label")} title={t("settings.label")}>
-            <Ico n="adjustments" cls="size-4" />
+            <Ico c="icon-[tabler--adjustments-horizontal]" />
           </button>
           <div id="theme-pop" popover="auto" style="position-anchor:--theme" class="dropdown dropdown-end mt-1 p-3 bg-base-200 border border-base-300 rounded-box shadow-lg w-64 max-w-[calc(100vw-1rem)] flex-col gap-3">
             <div class="text-xs font-semibold uppercase tracking-wide opacity-60">{t("theme.label")}</div>
             <div class="join w-full" role="radiogroup" aria-label={t("theme.label")}>
-              {([["light", t("theme.light"), "sun"], ["", t("theme.auto"), "device"], ["dark", t("theme.dark"), "moon"]] as const).map(([v, l, n]) => (
+              {([["light", t("theme.light"), "icon-[tabler--sun]"], ["", t("theme.auto"), "icon-[tabler--device-desktop]"], ["dark", t("theme.dark"), "icon-[tabler--moon]"]]).map(([v, l, ic]) => (
                 <label class="btn h-auto min-h-11 py-1.5 flex-1 flex-col gap-0.5 text-xs font-normal join-item has-checked:btn-primary" title={l}>
                   <input type="radio" name="theme" value={v} class="sr-only" aria-label={l} />
-                  <Ico n={n} cls="size-4" />
+                  <Ico c={ic} />
                   {l}
                 </label>
               ))}
