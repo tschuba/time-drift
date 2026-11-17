@@ -77,14 +77,15 @@ const ICON = {
   clockPlus: ["M20.984 12.535a9 9 0 1 0 -8.468 8.45", "M16 19h6", "M19 16v6", "M12 7v5l3 3"],
   maximize: ["M16 4l4 0l0 4", "M14 10l6 -6", "M8 20l-4 0l0 -4", "M4 20l6 -6", "M16 20l4 0l0 -4", "M14 14l6 6", "M8 4l-4 0l0 4", "M4 4l6 6"],
 };
-export const Ico = ({ n }: { n: keyof typeof ICON }) => (
-  <svg class="w-5 h-5 sm:hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{ICON[n].map((d) => <path d={d} />)}</svg>
+export const Ico = ({ n, always }: { n: keyof typeof ICON; always?: boolean }) => (
+  <svg class={always ? "w-5 h-5" : "w-5 h-5 sm:hidden"} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">{ICON[n].map((d) => <path d={d} />)}</svg>
 );
-export const Lbl = ({ children }: { children: string }) => <span class="hidden sm:inline">{children}</span>;
+// cq: reveal by editor width (container query) instead of viewport; 34rem = fields share one row, buttons wrap below; from 46rem everything fits on one row, so back to icon-only.
+export const Lbl = ({ children, cq, keep }: { children: string; cq?: boolean; keep?: boolean }) => <span class={cq ? `hidden @[34rem]:inline${keep ? "" : " @[46rem]:hidden"}` : "hidden sm:inline"}>{children}</span>;
 
 /** One editor under the bar: new block (no id) or the selected segment. */
 export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date: string; id?: string; start?: string; end?: string; brk?: string }) => (
-  <form class="p-2 rounded-box bg-base-100 border border-base-300" hx-post={id ? `/day/${date}/block/${id}` : `/day/${date}/blocks`} hx-swap="none">
+  <form class="@container p-2 rounded-box bg-base-100 border border-base-300" hx-post={id ? `/day/${date}/block/${id}` : `/day/${date}/blocks`} hx-swap="none">
     {/* Highlight the bar being edited; the style disappears with the form. */}
     {id && <style>{raw(`[data-block="${id}"]{box-shadow:inset 0 0 0 3px light-dark(#0e7490,#facc15),inset 0 0 0 5px var(--color-base-100)}`)}</style>}
     <div class="flex flex-wrap items-end gap-2">
@@ -102,7 +103,7 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
           <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
         </div>
       </label>
-      <label class="floating-label flex-1 min-w-40">
+      <label class="floating-label flex-1 min-w-52">
         <span>{t("breakH")}</span>
         <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-28" type="time" name="brk" value={brk} placeholder={t("breakH")} />
@@ -111,9 +112,11 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
           </span>
         </div>
       </label>
-      {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" /><Lbl>{t("delete")}</Lbl></button>}
-      {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" /><Lbl>{t("cancel")}</Lbl></button>}
-      {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" /><Lbl>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" /><Lbl>{t("day.addBlock")}</Lbl></button>}
+      <div class="flex gap-2 ml-auto">
+        {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico n="trash" always /><Lbl cq>{t("delete")}</Lbl></button>}
+        {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico n="x" always /><Lbl cq>{t("cancel")}</Lbl></button>}
+        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico n="check" always /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico n="clockPlus" always /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
+      </div>
     </div>
   </form>
 );
