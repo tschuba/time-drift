@@ -61,4 +61,10 @@ describe.skipIf(!url)("queries (postgres)", () => {
     expect(p.days.map((x) => x.entry.date)).toEqual(["2026-05-02"]);
     expect((await q.getPage(0, 10, "2026-05-02", undefined)).total).toBe(2);
   });
+
+  it("rejects overlapping blocks at the DB level", async () => {
+    await q.saveDay("2026-05-12", "8", null, [{ start: "08:00", end: "12:00", breakHours: "0" }]);
+    await q.addBlock("2026-05-12", "8", { start: "12:00", end: "13:00", breakHours: "0" }); // adjacent is fine
+    await expect(q.addBlock("2026-05-12", "8", { start: "11:00", end: null, breakHours: "0" })).rejects.toMatchObject({ cause: { code: "23P01" } });
+  });
 });
