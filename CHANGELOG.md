@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.8.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.7.0...time-drift-v0.8.0) (2026-11-17)
+
+
+### Features
+
+* **history:** improve date filter UX ([#31](https://github.com/tschuba/time-drift/issues/31)) ([eddce7b](https://github.com/tschuba/time-drift/commit/eddce7b883b452f3256397406c9a2c061eb0bd14))
+* **ui:** settings popover with theme (light/dark/auto) and language, Tabler icons ([#32](https://github.com/tschuba/time-drift/issues/32)) ([0000b55](https://github.com/tschuba/time-drift/commit/0000b556812403496e2ad46870ac05d75edf22af))
+
+
+### Bug Fixes
+
+* **import:** abort on duplicate/out-of-order dates and overlapping blocks ([#29](https://github.com/tschuba/time-drift/issues/29)) ([1d73765](https://github.com/tschuba/time-drift/commit/1d737654e3360c5b45a698c0bdcafa3ddd834194))
+
 ## [0.7.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.6.0...time-drift-v0.7.0) (2026-11-17)
 
 
