@@ -3,6 +3,27 @@
   themes: light --default, dark --prefersdark;
 }
 
+/* Same for light: default base-200/300 are barely off-white. */
+@plugin "daisyui/theme" {
+  name: "light";
+  default: true;
+  color-scheme: light;
+  --color-base-100: oklch(100% 0 0);
+  --color-base-200: oklch(95.5% 0.006 255);
+  --color-base-300: oklch(85% 0.012 255);
+}
+
+/* Default dark base shades are nearly identical; spread them so cards, navbar and dropdowns stand apart. */
+@plugin "daisyui/theme" {
+  name: "dark";
+  prefersdark: true;
+  color-scheme: dark;
+  --color-base-100: oklch(22% 0.015 255);
+  --color-base-200: oklch(29% 0.02 255);
+  --color-base-300: oklch(38% 0.025 255);
+  --color-base-content: oklch(95% 0.01 255);
+}
+
 /* Edge fade hinting horizontal scroll; right fade fades out at the end. Static fallback without scroll-driven animations. */
 @property --fade-l { syntax: "<length>"; inherits: false; initial-value: 0px; }
 @property --fade-r { syntax: "<length>"; inherits: false; initial-value: 24px; }
