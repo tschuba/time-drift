@@ -9,6 +9,7 @@ Usage:
 Groups multi-session rows (no date, but has start/end times) with their
 parent date row into multiple time_blocks per time_entry.
 Accumulates Soll (target hours) from continuation rows into the entry target.
+Aborts (exit 1) on duplicate dates, out-of-order dates or overlapping blocks within a day.
 """
 
 import sys
@@ -37,8 +38,10 @@ def main():
     days_map = {}  # date -> [target, note, blocks]
     current_date = None
     skip_current = False
+    prev_date = None
+    errors = []
 
-    for row in ws.iter_rows(min_row=3, values_only=True):
+    for ws_row, row in enumerate(ws.iter_rows(min_row=3, values_only=True), start=3):
         date_val = row[0]
         start_val = row[1]
         end_val = row[2]
@@ -58,12 +61,18 @@ def main():
             skip_current = current_date in SKIP_DATES
             if skip_current:
                 continue
+            # A wrong date would silently merge/misplace a day, so fail instead of guessing.
+            if current_date in days_map:
+                errors.append(f"Row {ws_row}: duplicate date {current_date}")
+            if prev_date and current_date < prev_date:
+                errors.append(f"Row {ws_row}: {current_date} is before previous date {prev_date}")
+            prev_date = current_date
 
             soll = Decimal(str(soll_val)) if soll_val is not None else Decimal("8.0")
             if current_date not in days_map:
                 days_map[current_date] = [soll, note_val, []]
             else:
-                # Merge: accumulate target and note from duplicate date rows
+                # Only reached for SKIP-free duplicates, which abort below; kept as a fallback
                 days_map[current_date][0] += soll
                 if not days_map[current_date][1] and note_val:
                     days_map[current_date][1] = note_val
@@ -83,6 +92,16 @@ def main():
         end_str = format_time(end_val) if end_val is not None else None
         break_hours = Decimal(str(break_val)) if break_val else Decimal("0")
         days_map[current_date][2].append((start_str, end_str, break_hours))
+
+    for day, (_, _, blocks) in days_map.items():
+        rng = sorted((minutes(a), minutes(b) + (1440 if b is not None and b < a else 0) if b else 2147483647)
+                     for a, b, _ in blocks)
+        for (s1, e1), (s2, _) in zip(rng, rng[1:]):
+            if s2 < e1:
+                errors.append(f"{day}: overlapping blocks ({s1}-{e1} min vs start {s2} min)")
+    if errors:
+        print("\n".join(errors), file=sys.stderr)
+        sys.exit(1)
 
     unique_days = [(date, data[0], data[1], data[2]) for date, data in sorted(days_map.items())]
 
@@ -108,6 +127,11 @@ def main():
 
     print()
     print("COMMIT;")
+
+
+def minutes(t):
+    h, m = int(t[:2]), int(t[3:5])
+    return h * 60 + m
 
 
 def format_time(t):
