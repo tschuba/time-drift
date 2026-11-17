@@ -24,7 +24,7 @@ export function LineChart({ points }: { points: Point[] }) {
   const starts = points.flatMap((p, i) => (i && p.label.slice(0, 7) === points[i - 1]!.label.slice(0, 7) ? [] : [i]));
   const ticks = starts.filter((_, k) => k % Math.ceil(starts.length / 8) === 0);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} class="w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} class="w-full" fill="currentColor">
       <line x1={PAD.l} x2={W - PAD.r} y1={y(0)} y2={y(0)} stroke="currentColor" opacity="0.3" stroke-dasharray="4" />
       <text x={PAD.l - 4} y={y(0) + 4} text-anchor="end" font-size="10">0</text>
       <text x={PAD.l - 4} y={y(Math.max(0, ...vals)) + 4} text-anchor="end" font-size="10">{Math.max(0, ...vals).toFixed(0)}</text>
@@ -63,7 +63,7 @@ export function BarChart({ bars }: { bars: { label: string; actual: number; targ
   const slot = (W - PAD.l - PAD.r) / bars.length;
   const bw = Math.min(20, slot / 2.5);
   return (
-    <svg viewBox={`0 0 ${W} ${H}`} class="w-full">
+    <svg viewBox={`0 0 ${W} ${H}`} class="w-full" fill="currentColor">
       <text x={PAD.l - 4} y={y(max) + 4} text-anchor="end" font-size="10">{max.toFixed(0)}</text>
       <text x={PAD.l - 4} y={y(0)} text-anchor="end" font-size="10">0</text>
       {bars.map((b, i) => {
