@@ -126,7 +126,10 @@ export const BlocksSection = ({ date, blocks }: { date: string; blocks: BlockRow
   <div>
     <p class="text-xs opacity-70 mb-1">{t("day.blocksHint")}</p>
     <Timeline date={date} blocks={blocks} />
-    <div id="block-editor"><BlockEditor date={date} start={nextStart(blocks)} /></div>
+    <div id="block-editor">{(() => {
+      const r = blocks.find((b) => !b.endTime); // preselect the running block
+      return r ? <BlockEditor date={date} id={r.id} start={hhmm(r.startTime)} end="" brk={brkHHmm(r.breakHours)} /> : <BlockEditor date={date} start={nextStart(blocks)} />;
+    })()}</div>
   </div>
 );
 
@@ -137,7 +140,23 @@ const parseBlock = (f: Record<string, unknown>): BlockInput | null => {
   const [bh, bm] = (brk ?? "00:00").split(":").map(Number);
   return { start, end: parseTimeInput(String(f.end ?? "")), breakHours: String(+((bh! * 60 + bm!) / 60).toFixed(2)) };
 };
+/** Blocks are half-open [start,end); a missing end means open-ended. Midnight-crossing ends wrap by +24h. */
+const span = (start: string, end: string | null): [number, number] => {
+  const a = mins(start);
+  const e = end ? mins(end) : Infinity;
+  return [a, e < a ? e + 1440 : e];
+};
+const overlaps = (blocks: BlockRow[], b: BlockInput, exceptId?: string) => {
+  const [s, e] = span(b.start, b.end);
+  return blocks.some((x) => {
+    if (x.id === exceptId) return false;
+    const [xs, xe] = span(x.startTime, x.endTime);
+    return s < xe && xs < e;
+  });
+};
 const isId = (s: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+/** Race fallback: Postgres exclusion_violation (23P01), possibly wrapped by drizzle in `cause`. */
+const isOverlapErr = (e: any) => (e?.cause?.code ?? e?.code) === "23P01";
 const refresh = (c: Context) => { c.header("HX-Refresh", "true"); return c.body(null, 204); };
 
 export const dayRoutes = new Hono();
@@ -152,7 +171,8 @@ dayRoutes.post("/day/:date/blocks", async (c) => {
   const date = c.req.param("date");
   const b = parseBlock(await c.req.parseBody());
   if (!isDate(date) || !b) return c.text(t("err.date"), 400);
-  await addBlock(date, defaultTargetHours(date).toString(), b);
+  if (overlaps((await getDay(date))?.blocks ?? [], b)) return c.text(t("err.overlap"), 400);
+  try { await addBlock(date, defaultTargetHours(date).toString(), b); } catch (e) { if (isOverlapErr(e)) return c.text(t("err.overlap"), 400); throw e; }
   return refresh(c);
 });
 
@@ -166,7 +186,10 @@ dayRoutes.get("/day/:date/block/:id/edit", async (c) => {
 dayRoutes.post("/day/:date/block/:id", async (c) => {
   const b = parseBlock(await c.req.parseBody());
   if (!isId(c.req.param("id")) || !b) return c.text(t("err.date"), 400);
-  await updateBlock(c.req.param("id"), b);
+  const date = c.req.param("date");
+  if (!isDate(date)) return c.text(t("err.date"), 400);
+  if (overlaps((await getDay(date))?.blocks ?? [], b, c.req.param("id"))) return c.text(t("err.overlap"), 400);
+  try { await updateBlock(c.req.param("id"), b); } catch (e) { if (isOverlapErr(e)) return c.text(t("err.overlap"), 400); throw e; }
   return refresh(c);
 });
 

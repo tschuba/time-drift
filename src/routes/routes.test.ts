@@ -45,6 +45,22 @@ beforeEach(() => {
 });
 
 describe("day", () => {
+  it("rejects overlapping blocks", async () => {
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-04", "08:00:00", "12:00:00"));
+    expect((await post("/day/2026-05-04/blocks", { start: "11:00", end: "13:00" })).status).toBe(400);
+    expect((await post("/day/2026-05-04/blocks", { start: "07:00" })).status).toBe(400);
+    expect((await post("/day/2026-05-04/blocks", { start: "12:00", end: "13:00" })).status).toBe(204);
+    const id = "00000000-0000-0000-0000-000000000000";
+    vi.mocked(q.getDay).mockResolvedValue({ ...day("2026-05-04", "08:00:00", "12:00:00"), });
+    expect((await post(`/day/2026-05-04/block/${id}`, { start: "09:00", end: "10:00" })).status).toBe(400);
+    expect((await post("/day/2026-05-04/block/b", { start: "09:00", end: "10:00" })).status).toBe(400); // invalid id
+  });
+  it("preselects the running block in the editor", async () => {
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-04", "08:00:00", null));
+    expect(await (await app.request("/day/2026-05-04")).text()).toContain('/day/2026-05-04/block/b"');
+    vi.mocked(q.getDay).mockResolvedValue(day("2026-05-04", "08:00:00", "12:00:00"));
+    expect(await (await app.request("/day/2026-05-04")).text()).not.toContain('/day/2026-05-04/block/b"');
+  });
   it("rejects invalid dates", async () => {
     expect((await app.request("/day/nope")).status).toBe(400);
     expect((await post("/day/2026-13-45", { target_hours: "8" })).status).toBe(400);

@@ -15,6 +15,13 @@
       "when": 1794407039139,
       "tag": "0001_updated_at_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794493439139,
+      "tag": "0002_blocks_no_overlap",
+      "breakpoints": true
     }
   ]
 }
