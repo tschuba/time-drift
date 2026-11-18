@@ -39,12 +39,12 @@ dashboardRoutes.get("/", async (c) => {
           <div class={`stat-value ${total.gt(0) ? "text-success" : total.lt(0) ? "text-error" : ""}`}>{formatHM(total, true)}</div>
         </div>
         <div class="stat">
-          <div class="stat-title">{t("actual")}</div>
-          <div class="stat-value">{formatHM(todayActual ?? new Decimal(0))}</div>
-        </div>
-        <div class="stat">
           <div class="stat-title">{t("dash.todaySaldo")}</div>
           <div class={`stat-value ${cls(todaySaldo)}`}>{formatHM(todaySaldo, true)}</div>
+        </div>
+        <div class="stat">
+          <div class="stat-title">{t("actual")}</div>
+          <div class="stat-value">{formatHM(todayActual ?? new Decimal(0))}</div>
         </div>
         <div class="stat">
           <div class="stat-title">{t("dash.todayBreak")}</div>
