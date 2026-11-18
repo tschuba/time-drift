@@ -22,9 +22,10 @@ import { dashboardRoutes } from "./dashboard.js";
 import { dayRoutes } from "./day.js";
 import { historyRoutes } from "./history.js";
 import { monthRoutes } from "./month.js";
+import { pwaRoutes } from "./pwa.js";
 
 const app = new Hono();
-for (const r of [dashboardRoutes, dayRoutes, monthRoutes, historyRoutes, analyticsRoutes]) app.route("/", r);
+for (const r of [dashboardRoutes, dayRoutes, monthRoutes, historyRoutes, analyticsRoutes, pwaRoutes]) app.route("/", r);
 
 const day = (date: string, start: string, end: string | null, brk = "0.50", target = "8.00") => ({
   entry: { id: date, date, targetHours: target, note: "n", createdAt: new Date(), updatedAt: new Date() },
@@ -197,5 +198,18 @@ describe("analytics", () => {
     expect(html).toContain("06:15"); // avg of workdays with actual > 0: (8.5 + 4) / 2
     expect(html).toContain("Monday");
     expect(html).toContain("33.3%"); // 1 of 3 workdays over target
+  });
+});
+
+describe("pwa", () => {
+  it("serves manifest, service worker and day/today redirect", async () => {
+    const m = await app.request("/manifest.webmanifest");
+    expect(m.headers.get("content-type")).toContain("application/manifest+json");
+    expect((await m.json()).shortcuts.length).toBeGreaterThan(0);
+    const sw = await app.request("/sw.js");
+    expect(await sw.text()).not.toContain("__V__");
+    const r = await app.request("/day/today");
+    expect(r.status).toBe(302);
+    expect(r.headers.get("location")).toMatch(/^\/day\/\d{4}-\d{2}-\d{2}$/);
   });
 });

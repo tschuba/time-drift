@@ -8,6 +8,7 @@ import { dashboardRoutes } from "./routes/dashboard.js";
 import { dayRoutes } from "./routes/day.js";
 import { historyRoutes } from "./routes/history.js";
 import { monthRoutes } from "./routes/month.js";
+import { pwaRoutes } from "./routes/pwa.js";
 import { i18n, langRoutes } from "./lib/i18n.js";
 import { logger } from "./lib/logger.js";
 
@@ -21,6 +22,7 @@ app.route("/", dayRoutes);
 app.route("/", historyRoutes);
 app.route("/", analyticsRoutes);
 app.route("/", monthRoutes);
+app.route("/", pwaRoutes);
 
 if (process.env.VITEST === undefined) {
   await migrate(db, { migrationsFolder: "drizzle" });
