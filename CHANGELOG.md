@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/tschuba/time-drift/compare/v0.9.0...v0.10.0) (2026-11-18)
+
+
+### Features
+
+* **pwa:** installable PWA with offline fallback, shortcuts and app badge ([#35](https://github.com/tschuba/time-drift/issues/35)) ([c05dfaf](https://github.com/tschuba/time-drift/commit/c05dfaf5c88b1c3c599712202d898c31cefdb4c3))
+
 ## [0.9.0](https://github.com/tschuba/time-drift/compare/v0.8.0...v0.9.0) (2026-11-18)
 
 
