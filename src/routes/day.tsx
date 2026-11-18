@@ -153,6 +153,8 @@ const refresh = (c: Context) => { c.header("HX-Refresh", "true"); return c.body(
 
 export const dayRoutes = new Hono();
 
+dayRoutes.get("/day/today", (c) => c.redirect(`/day/${localIso(new Date())}`, 302));
+
 dayRoutes.get("/day/:date/block-form", async (c) => {
   const date = c.req.param("date");
   if (!isDate(date)) return c.text("", 400);

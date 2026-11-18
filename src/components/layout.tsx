@@ -11,7 +11,7 @@ const CSS = `/static/css/app.css?v=${ver("css/app.css")}`;
 const HTMX = `/static/js/htmx.min.js?v=${ver("js/htmx.min.js")}`;
 
 // Read from package.json at startup (cwd-relative, like public/ above); release-please keeps it current.
-const VERSION: string = (() => { try { return JSON.parse(readFileSync("package.json", "utf8")).version; } catch { return "dev"; } })();
+export const VERSION: string = (() => { try { return JSON.parse(readFileSync("package.json", "utf8")).version; } catch { return "dev"; } })();
 
 export const Layout = ({ title, nav, children }: { title: string; nav?: string; children?: Child }) => (
   <html lang={lang()}>
@@ -20,6 +20,9 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
       {/* Apply a saved theme before first paint; without one, daisyUI follows prefers-color-scheme. */}
       <script dangerouslySetInnerHTML={{ __html: `try{var s=localStorage.getItem("theme");if(s)document.documentElement.dataset.theme=s}catch(e){}addEventListener("DOMContentLoaded",function(){var s="";try{s=localStorage.getItem("theme")||""}catch(e){}document.querySelectorAll("input[name=theme]").forEach(function(r){r.checked=r.value===s;r.onchange=function(){var d=document.documentElement;if(r.value)d.dataset.theme=r.value;else delete d.dataset.theme;try{r.value?localStorage.setItem("theme",r.value):localStorage.removeItem("theme")}catch(e){}document.getElementById("theme-pop").hidePopover()}})})` }} />
+      <link rel="manifest" href="/manifest.webmanifest" crossorigin="use-credentials" />
+      <meta name="theme-color" content="#2563eb" />
+      <link rel="apple-touch-icon" href="/static/icons/apple-touch-icon.png" />
       <title>{title} — Time Drift</title>
       <link rel="stylesheet" href={CSS} />
       <script src={HTMX} defer />
@@ -65,9 +68,11 @@ export const Layout = ({ title, nav, children }: { title: string; nav?: string; 
         <a class="link" target="_blank" rel="noopener noreferrer" href={`https://github.com/tschuba/time-drift/releases/tag/v${VERSION}`}>v{VERSION}</a>
       </footer>
       <div id="flash" class="toast toast-end" role="status" />
+      {/* PWA: service worker; an expired Authentik session makes htmx requests fail cross-origin, so reload to reach the login. */}
+      <script dangerouslySetInnerHTML={{ __html: `if("serviceWorker"in navigator)navigator.serviceWorker.register("/sw.js");addEventListener("htmx:sendError",function(){location.reload()})` }} />
       {/* One-shot flash message set by POST handlers; static string, no user input. */}
       {/* Running blocks: reload each minute unless the user has typed something. */}
-      <script dangerouslySetInnerHTML={{ __html: `(function(){var d=0;addEventListener("input",function(){d=1});if(document.querySelector("[data-running]"))setInterval(function(){if(!d&&!document.hidden)location.reload()},60000)})()` }} />
+      <script dangerouslySetInnerHTML={{ __html: `(function(){var d=0;addEventListener("input",function(){d=1});var run=document.querySelector("[data-running]");if(navigator.setAppBadge&&(run||document.getElementById("block-editor")))(run?navigator.setAppBadge():navigator.clearAppBadge()).catch(function(){});if(run)setInterval(function(){if(!d&&!document.hidden)location.reload()},60000)})()` }} />
       {/* htmx drops 4xx bodies by default; show them as an error toast (textContent, so no injection). */}
       <script dangerouslySetInnerHTML={{ __html: `addEventListener("htmx:beforeSwap",function(e){var x=e.detail.xhr;if(x.status<400||x.status>=500)return;e.detail.shouldSwap=false;var f=document.getElementById("flash");if(!f)return;f.innerHTML='<div class="alert alert-error"><span></span></div>';f.firstChild.firstChild.textContent=x.responseText;clearTimeout(f._t);f._t=setTimeout(function(){f.innerHTML=""},4000)})` }} />
       <script dangerouslySetInnerHTML={{ __html: `(function(){var m=document.cookie.match(/(?:^|; )flash=([^;]+)/);if(!m)return;document.cookie="flash=; path=/; max-age=0";var f=document.getElementById("flash");f.innerHTML='<div class="alert alert-success"><span></span></div>';f.firstChild.firstChild.textContent=decodeURIComponent(m[1]);setTimeout(function(){f.remove()},3000)})()` }} />
