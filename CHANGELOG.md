@@ -1,5 +1,54 @@
 # Changelog
 
+## [0.9.0](https://github.com/tschuba/time-drift/compare/v0.8.0...v0.9.0) (2026-11-18)
+
+
+### Features
+
+* add AGPL-3.0 license and footer with copyright, license and version ([#13](https://github.com/tschuba/time-drift/issues/13)) ([8ba2643](https://github.com/tschuba/time-drift/commit/8ba2643e23b06fe38d975bb3726a4887e782a830))
+* add analytics page with summary stats, trend chart, bar chart, and heatmap ([f6e2f5b](https://github.com/tschuba/time-drift/commit/f6e2f5b34631cba047f9f2698a62b2c00c9a77b9))
+* add analytics query functions and SVG chart rendering service ([49f0771](https://github.com/tschuba/time-drift/commit/49f07712be1a576a8338bb7b151889743c9f3aa1))
+* add app healthcheck to docker-compose ([#14](https://github.com/tschuba/time-drift/issues/14)) ([5b81d20](https://github.com/tschuba/time-drift/commit/5b81d20e4dd8f35d56a79700959708dbe03ec759))
+* add base template, HTMX, and CSS styles ([957de44](https://github.com/tschuba/time-drift/commit/957de443ef3c2a7b89a66e2fb751483b2b80a326))
+* add calendar grid to month view ([#16](https://github.com/tschuba/time-drift/issues/16)) ([9b02628](https://github.com/tschuba/time-drift/commit/9b02628c4b92081f497fde0734a6af96ba851fd9))
+* add dashboard page with saldo badge and recent days ([6686554](https://github.com/tschuba/time-drift/commit/66865540491ccbe56bf4aa5a7c452c5512cb4ec6))
+* add day entry editor with CRUD routes and templates ([8547910](https://github.com/tschuba/time-drift/commit/85479105ec1abd0fa79e565211363c9fcb56e5c1))
+* add Dockerfile and docker-compose.yml for deployment ([32c11ae](https://github.com/tschuba/time-drift/commit/32c11aea2c83bb7e865fae65d438f2e0dffd37a5))
+* add Excel to SQL import script for historical data migration ([7039302](https://github.com/tschuba/time-drift/commit/7039302cb625091208b158fb47fe30aa9a944317))
+* add history view with pagination and date filters ([a3c4fe6](https://github.com/tschuba/time-drift/commit/a3c4fe6a40f416b256d55e8f6f3715af4252aa15))
+* add initial database migration for time_entries and time_blocks ([c04142d](https://github.com/tschuba/time-drift/commit/c04142d6508b8f3dbe99a839f1a508ac12511782))
+* add models and database query functions ([a66239a](https://github.com/tschuba/time-drift/commit/a66239a102991b409f3f871cc8ca98b75e0326a7))
+* add monthly view with day summaries and navigation ([8601385](https://github.com/tschuba/time-drift/commit/860138588940ab42f63f0b9c29843abff5def325))
+* add quick-fill buttons and actual/saldo stats to day view ([#17](https://github.com/tschuba/time-drift/issues/17)) ([59d1cbc](https://github.com/tschuba/time-drift/commit/59d1cbcd3458c1692612696cf2b0e58aef1ca57e))
+* add time service with business logic and unit tests ([abf9cb3](https://github.com/tschuba/time-drift/commit/abf9cb34cc775494e9873849bb292f9a473e6893))
+* analytics year filter, chart hover labels and month ticks ([#19](https://github.com/tschuba/time-drift/issues/19)) ([5fb1975](https://github.com/tschuba/time-drift/commit/5fb1975646a03e285e75b6a35e14ec1fb1269a25))
+* auto-refresh page while a block is running ([#24](https://github.com/tschuba/time-drift/issues/24)) ([043cc15](https://github.com/tschuba/time-drift/commit/043cc15555fe7b3116f0de0d1938203281c49386))
+* embed today's time entry form inline on the dashboard ([692ecf5](https://github.com/tschuba/time-drift/commit/692ecf5c0773772b55fa4fad6c4f8adc66dd69a8))
+* history date presets and time-based break input ([#22](https://github.com/tschuba/time-drift/issues/22)) ([e0d7696](https://github.com/tschuba/time-drift/commit/e0d76965a1923b87f1223b44b88a4d36d2cb3888))
+* **history:** improve date filter UX ([#31](https://github.com/tschuba/time-drift/issues/31)) ([eddce7b](https://github.com/tschuba/time-drift/commit/eddce7b883b452f3256397406c9a2c061eb0bd14))
+* preselect running block and forbid overlapping blocks ([#26](https://github.com/tschuba/time-drift/issues/26)) ([ef23a67](https://github.com/tschuba/time-drift/commit/ef23a67f8305c0d28adfc127bf07f487f195ec5d))
+* scaffold Rust project with Axum, sqlx, and config ([078f78d](https://github.com/tschuba/time-drift/commit/078f78dd83b548b804e4c290e0745a91041f0914))
+* **ui:** add today's saldo/break stats, highlight edited block, show break in timeline ([#6](https://github.com/tschuba/time-drift/issues/6)) ([42e1e93](https://github.com/tschuba/time-drift/commit/42e1e9357b135d96ee44bb90938c42da75f90dbb))
+* **ui:** collapse nav into burger menu on mobile ([#8](https://github.com/tschuba/time-drift/issues/8)) ([e85e989](https://github.com/tschuba/time-drift/commit/e85e989653641b4ccdc28fcaa28f7ac922dbea32))
+* **ui:** heatmap hover/pin tooltip and long dates in trend chart ([#7](https://github.com/tschuba/time-drift/issues/7)) ([9dc0710](https://github.com/tschuba/time-drift/commit/9dc0710b2bae1365b9b0a97b8b42cb3e83ac7b0d))
+* **ui:** improve usability, add i18n (de/en), dark mode and cache-busting ([#4](https://github.com/tschuba/time-drift/issues/4)) ([94df652](https://github.com/tschuba/time-drift/commit/94df652fea6653f36af357bb0b12c9ad1e098a4b))
+* **ui:** settings popover with theme (light/dark/auto) and language, Tabler icons ([#32](https://github.com/tschuba/time-drift/issues/32)) ([0000b55](https://github.com/tschuba/time-drift/commit/0000b556812403496e2ad46870ac05d75edf22af))
+* **ui:** timeline block editor and HH:MM time display ([#5](https://github.com/tschuba/time-drift/issues/5)) ([fc50f92](https://github.com/tschuba/time-drift/commit/fc50f9231ddfc9209d2aa6e2aa5fe9ff4a162dad))
+
+
+### Bug Fixes
+
+* **analytics:** always show 'All' range, clear year on click, localize range buttons ([#20](https://github.com/tschuba/time-drift/issues/20)) ([ddad239](https://github.com/tschuba/time-drift/commit/ddad23968c6aeceee096a24cc250394aa1a21efe))
+* **charts:** readable axis labels and hover values in dark theme ([#27](https://github.com/tschuba/time-drift/issues/27)) ([7d67649](https://github.com/tschuba/time-drift/commit/7d676493f67df20e68f551a59095bdeea9ba7c37))
+* correct midnight-crossing saldo calc and add import skip for incomplete row ([#1](https://github.com/tschuba/time-drift/issues/1)) ([2c01302](https://github.com/tschuba/time-drift/commit/2c0130225d91b9021383070bc20caf52d1f4c399))
+* correct saldo calculation for midnight-crossing blocks and multi-target days ([f7791f6](https://github.com/tschuba/time-drift/commit/f7791f6d4689cecd1195afc7202db69c35a22af4))
+* **day:** keep block editor layout clean across widths ([#28](https://github.com/tschuba/time-drift/issues/28)) ([9cb1eac](https://github.com/tschuba/time-drift/commit/9cb1eaca4a324263aa060ce0523501ead3d8b43f))
+* don't count days without entry as deficit in month/dashboard views ([#9](https://github.com/tschuba/time-drift/issues/9)) ([53d8ca2](https://github.com/tschuba/time-drift/commit/53d8ca2737a9c21868efea0c015b33d3634f6112))
+* **import:** abort on duplicate/out-of-order dates and overlapping blocks ([#29](https://github.com/tschuba/time-drift/issues/29)) ([1d73765](https://github.com/tschuba/time-drift/commit/1d737654e3360c5b45a698c0bdcafa3ddd834194))
+* redirect to origin page after save/cancel/delete and use client-side block removal ([8646d1a](https://github.com/tschuba/time-drift/commit/8646d1a39bb6d54fa7abbf19e62fb813f17c210d))
+* **release:** create tags as vX.Y.Z without component prefix ([#33](https://github.com/tschuba/time-drift/issues/33)) ([8eefcda](https://github.com/tschuba/time-drift/commit/8eefcdaf9ebc0135b1aa173b855d84fe459206e7))
+* use axum-extra Form extractor to handle single-value form arrays ([15f8f8a](https://github.com/tschuba/time-drift/commit/15f8f8ab98c5fcadaced75328a67c651ccda688d))
+
 ## [0.8.0](https://github.com/tschuba/time-drift/compare/time-drift-v0.7.0...time-drift-v0.8.0) (2026-11-17)
 
 
