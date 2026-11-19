@@ -1,4 +1,4 @@
-import { dateLong, monthShort, t } from "./i18n.js";
+import { dateLong, monthShort, t, weekday } from "./i18n.js";
 import { formatHM } from "./time.js";
 // Minimal inline-SVG charts, rendered server-side as hono/jsx.
 export type Point = { label: string; value: number };
@@ -89,6 +89,7 @@ export function BarChart({ bars }: { bars: { label: string; actual: number; targ
 /** GitHub-style grid: columns = weeks (Mon-first), rows = weekdays. `days` maps YYYY-MM-DD -> hours. */
 export function Heatmap({ year, days }: { year: number; days: Map<string, number> }) {
   const cell = 12;
+  const gutter = 24;
   const start = new Date(Date.UTC(year, 0, 1));
   const cells = [];
   for (let d = new Date(start); d.getUTCFullYear() === year; d.setUTCDate(d.getUTCDate() + 1)) {
@@ -98,10 +99,13 @@ export function Heatmap({ year, days }: { year: number; days: Map<string, number
     const h = days.get(iso);
     const opacity = h === undefined ? 0.06 : h <= 0 ? 0.1 : Math.min(1, 0.25 + h / 12);
     cells.push(
-      <rect x={col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity} class={h && h > 0 ? "text-success" : ""}>
+      <rect x={gutter + col * (cell + 2)} y={row * (cell + 2)} width={cell} height={cell} rx="2" fill="currentColor" opacity={opacity} class={h && h > 0 ? "text-success" : ""}>
         <title>{dateLong(iso)}{h === undefined ? "" : `: ${formatHM(h)}`}</title>
       </rect>,
     );
   }
-  return <svg viewBox={`0 0 ${54 * (cell + 2)} ${7 * (cell + 2)}`} class="w-full">{cells}</svg>;
+  const labels = Array.from({ length: 7 }, (_, r) => (
+    <text x={0} y={r * (cell + 2) + cell - 2} font-size="10" fill="currentColor" opacity="0.7">{weekday((r + 1) % 7, "short")}</text>
+  ));
+  return <svg viewBox={`0 0 ${gutter + 54 * (cell + 2)} ${7 * (cell + 2)}`} class="w-full">{labels}{cells}</svg>;
 }
