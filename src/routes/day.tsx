@@ -104,7 +104,7 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
       <div class="flex gap-2 ml-auto">
         {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico c="icon-[tabler--trash]" /><Lbl cq>{t("delete")}</Lbl></button>}
         {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico c="icon-[tabler--x]" /><Lbl cq>{t("cancel")}</Lbl></button>}
-        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico c="icon-[tabler--check]" /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico c="icon-[tabler--clock-plus]" /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
+        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico c="icon-[tabler--check]" /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" onclick="const f=this.form;if(!f.start.value&&!f.end.value&&!f.brk.value)f.start.value=new Date().toTimeString().slice(0,5)" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico c="icon-[tabler--clock-plus]" /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
       </div>
     </div>
   </form>
