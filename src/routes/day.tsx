@@ -74,7 +74,7 @@ export const Lbl = ({ children, cq, keep }: { children: string; cq?: boolean; ke
 
 /** One editor under the bar: new block (no id) or the selected segment. */
 export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date: string; id?: string; start?: string; end?: string; brk?: string }) => (
-  <form class="@container p-2 rounded-box bg-base-100 border border-base-300" hx-post={id ? `/day/${date}/block/${id}` : `/day/${date}/blocks`} hx-swap="none">
+  <form class="@container p-2 rounded-box bg-base-100 border border-base-300" hx-post={id ? `/day/${date}/block/${id}` : `/day/${date}/blocks`} oninput="const s=this.querySelector('[data-stop]');if(s){const m=this.end.value||this.brk.value!==this.brk.defaultValue||this.start.value!==this.start.defaultValue;s.classList.toggle('hidden',!!m);this.querySelector('[data-save]').classList.toggle('hidden',!m)}" hx-swap="none">
     {/* Highlight the bar being edited; the style disappears with the form. */}
     {id && <style>{raw(`[data-block="${id}"]{box-shadow:inset 0 0 0 3px light-dark(#0e7490,#facc15),inset 0 0 0 5px var(--color-base-100)}`)}</style>}
     <div class="flex flex-wrap items-end gap-2">
@@ -82,14 +82,14 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
         <span>{t("start")}</span>
         <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("start")} type="time" name="start" value={start} required />
-          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.start.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
+          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.start.value=new Date().toTimeString().slice(0,5);this.form.dispatchEvent(new Event('input'))">{t("now")}</button>
         </div>
       </label>
       <label class="floating-label flex-1 min-w-40">
         <span>{t("end")}</span>
         <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-12" placeholder={t("end")} type="time" name="end" value={end} />
-          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5)">{t("now")}</button>
+          <button type="button" class="btn btn-ghost btn-xs absolute right-9 top-1/2 -translate-y-1/2" onclick="this.form.end.value=new Date().toTimeString().slice(0,5);this.form.dispatchEvent(new Event('input'))">{t("now")}</button>
         </div>
       </label>
       <label class="floating-label flex-1 min-w-52">
@@ -97,14 +97,15 @@ export const BlockEditor = ({ date, id, start = "", end = "", brk = "" }: { date
         <div class="input input-md w-full relative">
           <input class="grow min-w-0 pr-28" type="time" name="brk" value={brk} placeholder={t("breakH")} />
           <span class="absolute right-9 top-1/2 -translate-y-1/2 flex">
-            {[["00:30", "30m"], ["01:00", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}'`}>{l}</button>)}
+            {[["00:30", "30m"], ["01:00", "1h"]].map(([v, l]) => <button type="button" class="btn btn-ghost btn-xs" onclick={`this.form.brk.value='${v}';this.form.dispatchEvent(new Event('input'))`}>{l}</button>)}
           </span>
         </div>
       </label>
       <div class="flex gap-2 ml-auto">
         {id && <button type="button" class="btn btn-ghost btn-md text-error" hx-post={`/day/${date}/block/${id}/delete`} hx-confirm={t("day.confirmRemoveBlock")} hx-swap="none" aria-label={t("delete")} title={t("delete")}><Ico c="icon-[tabler--trash]" /><Lbl cq>{t("delete")}</Lbl></button>}
         {id && <button type="button" class="btn btn-ghost btn-md" hx-get={`/day/${date}/block-form`} {...target} aria-label={t("cancel")} title={t("cancel")}><Ico c="icon-[tabler--x]" /><Lbl cq>{t("cancel")}</Lbl></button>}
-        {id ? <button class="btn btn-primary btn-md" aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico c="icon-[tabler--check]" /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" onclick="const f=this.form;if(!f.start.value&&!f.end.value&&!f.brk.value)f.start.value=new Date().toTimeString().slice(0,5)" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico c="icon-[tabler--clock-plus]" /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
+        {id && !end && <button type="button" data-stop class="btn btn-warning btn-md" onclick="this.form.end.value=new Date().toTimeString().slice(0,5);this.form.requestSubmit()" aria-label={t("day.stopBlock")} title={t("day.stopBlock")}><Ico c="icon-[tabler--clock-stop] animate-pulse motion-reduce:animate-none" /><Lbl cq>{t("day.stopBlock")}</Lbl></button>}
+        {id ? <button data-save class={`btn btn-primary btn-md${end ? "" : " hidden"}`} aria-label={t("day.saveBlock")} title={t("day.saveBlock")}><Ico c="icon-[tabler--check]" /><Lbl cq>{t("day.saveBlock")}</Lbl></button> : <button class="btn btn-primary btn-md" onclick="const f=this.form;if(!f.start.value&&!f.end.value&&!f.brk.value)f.start.value=new Date().toTimeString().slice(0,5)" aria-label={t("day.addBlock")} title={t("day.addBlock")}><Ico c="icon-[tabler--clock-plus]" /><Lbl cq keep>{t("day.addBlock")}</Lbl></button>}
       </div>
     </div>
   </form>
