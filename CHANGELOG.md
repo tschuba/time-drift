@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.11.0](https://github.com/tschuba/time-drift/compare/v0.10.0...v0.11.0) (2026-11-20)
+
+
+### Features
+
+* **day:** add Stop button for running blocks ([#41](https://github.com/tschuba/time-drift/issues/41)) ([096e0d4](https://github.com/tschuba/time-drift/commit/096e0d41d84af48a90d2442637f0b43657208c02))
+* **day:** start block at current time when form is empty ([#38](https://github.com/tschuba/time-drift/issues/38)) ([f2d9c7f](https://github.com/tschuba/time-drift/commit/f2d9c7fcba6668859b7c50128f1af0b025d67126))
+* **stats:** add weekday labels to heatmap ([#40](https://github.com/tschuba/time-drift/issues/40)) ([01c8653](https://github.com/tschuba/time-drift/commit/01c86538a2235f2e1eca98f75717f3009974f262))
+
 ## [0.10.0](https://github.com/tschuba/time-drift/compare/v0.9.0...v0.10.0) (2026-11-18)
 
 
